@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddForeignKeyToMemeCategoryId extends Migration
+class DropMemeCategoryIdColumn extends Migration
 {
     /**
      * Run the migrations.
@@ -14,10 +14,7 @@ class AddForeignKeyToMemeCategoryId extends Migration
     public function up()
     {
         Schema::table('meme', function (Blueprint $table) {
-            $table->foreign('category_id')
-                  ->references('id')->on('category')
-                  ->onDelete('restrict')
-                  ->onUpdate('restrict');
+            $table->dropColumn('category_id');
         });
     }
 
@@ -29,7 +26,7 @@ class AddForeignKeyToMemeCategoryId extends Migration
     public function down()
     {
         Schema::table('meme', function (Blueprint $table) {
-            $table->dropForeign(['category_id']);
+            $table->unsignedBigInteger('category_id')->after('template_id');
         });
     }
 }

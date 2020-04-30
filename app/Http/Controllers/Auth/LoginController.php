@@ -62,9 +62,4 @@ class LoginController extends Controller
 
         return $this->sendFailedLoginResponse($request);
     }
-
-    public function userLogout() {
-        Auth::guard('web')->logout();
-        return redirect('/');
-    }
 }

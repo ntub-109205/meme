@@ -16,8 +16,11 @@ class CreateCategoryTable extends Migration
         Schema::create('category', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->timestamps();
         });
+
+        DB::table('category')->insert(['name' => 'meme']);
+        DB::table('category')->insert(['name' => 'elder']);
+        DB::table('category')->insert(['name' => 'gif']);
     }
 
     /**
