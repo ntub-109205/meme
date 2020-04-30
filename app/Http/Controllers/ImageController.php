@@ -37,7 +37,7 @@ class ImageController extends Controller
         $filename = time().'.'.$image->extension();
 
         $category = Category::find($request->category_id);
-        $location = public_path('images\\templates\\'.$category->name.'\\'.$filename);
+        $location = public_path('images/templates/'.$category->name.'/'.$filename);
         Image::make($image)->save($location);
         $template->filelink = $filename;
         $template->save();
