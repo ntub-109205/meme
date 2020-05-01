@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Image;
 use Storage;
+use Auth;
 use App\Template;
 use App\Category;
 
@@ -19,7 +20,6 @@ class ImageController extends Controller
     {
         // validate data
         $request->validate([
-            'user_id' => 'required',
             'category_id' => 'required',
             'name' => 'required|max:255',
             'share' => 'required|boolean',
@@ -28,7 +28,7 @@ class ImageController extends Controller
 
         // post data
         $template = new Template;
-        $template->user_id = $request->user_id;
+        $template->user_id = Auth::guard('web')->user()->id;
         $template->category_id = $request->category_id;
         $template->name = $request->name;
         $template->share = $request->share;
