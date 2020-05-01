@@ -8,6 +8,8 @@ use Storage;
 use Auth;
 use App\Template;
 use App\Category;
+use Validator;
+use Illuminate\Validation\Rule;
 
 class ImageController extends Controller
 {
@@ -19,12 +21,16 @@ class ImageController extends Controller
     public function templateStore(Request $request)
     {
         // validate data
-        $request->validate([
-            'category_id' => 'required',
+        $validator = Validator::make($request->all(), [
+            'category_id' => ['required', Rule::In(['1', '2'])],
             'name' => 'required|max:255',
             'share' => 'required|boolean',
-            'image' => 'required|image',
+            'image' => 'required|image'
         ]);
+
+        if ($validator->fails()) {
+            return json_encode(['failed' => 'post template failed']);
+        }
 
         // post data
         $template = new Template;
