@@ -41,12 +41,15 @@ class ImageController extends Controller
             // save image
         $image = $request->file('image');
         $filename = time().'.'.$image->extension();
-
-        $category = Category::find($request->category_id);
-        $location = public_path('images/templates/'.$category->name.'/'.$filename);
-        Image::make($image)->save($location);
         $template->filelink = $filename;
-        $template->save();
+        try {
+            $template->save();
+            $category = Category::find($request->category_id);
+            $location = public_path('images/templates/'.$category->name.'/'.$filename);
+            Image::make($image)->save($location);
+        } catch(PDOException $e) {
+            return json_encode(['fail' => $e->getMessage()]);
+        }
 
         return json_encode(['success' => 'your posts has been successfully saved!']);
     }
