@@ -11,7 +11,6 @@ use App\Category;
 use App\Meme;
 use Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 class ImageController extends Controller
@@ -19,6 +18,42 @@ class ImageController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+    }
+
+    // 查詢最多人使用且公開的模板
+    public function templateShow(Request $request)
+    {
+        // validate data
+        $validator = Validator::make($request->all(), [
+            'category_id' => ['required', Rule::In(['1', '2'])]
+        ]);
+
+        if ($validator->fails()) {
+            return json_encode(['failed' => 'post template failed']);
+        }
+
+        // search data
+        try {
+            $category = Category::find($request->category_id);
+            $path = url('/images/templates/');
+            $template = DB::select(
+                "
+                SELECT m.`template_id`, CONCAT('$path/', '$category->name/', t.`filelink`) AS `filelink`, t.`name`, COUNT(m.`template_id`) AS `count`
+                FROM `meme` m
+                INNER JOIN `templates` t
+                ON m.`template_id` = t.`id`
+                WHERE t.`category_id` = :category_id
+                AND t.`share` = 1
+                AND m.`share` = 1
+                GROUP BY m.`template_id`
+                ORDER BY COUNT(m.`template_id`) DESC
+                ", ['category_id' => $request->category_id]
+            );
+        } catch(\Throwable $e) {
+            return json_encode(['fail' => $e->getMessage()]);
+        }
+
+        return json_encode(['templates' => $template]);
     }
 
     public function templateStore(Request $request)
@@ -36,21 +71,21 @@ class ImageController extends Controller
         }
 
         // post data
-        $template = new Template;
-        $template->user_id = Auth::guard('web')->user()->id;
-        $template->category_id = $request->category_id;
-        $template->name = $request->name;
-        $template->share = $request->share;
-            // save image
-        $image = $request->file('image');
-        $filename = time().'.'.$image->extension();
-        $template->filelink = $filename;
         try {
+            $template = new Template;
+            $template->user_id = Auth::guard('web')->user()->id;
+            $template->category_id = $request->category_id;
+            $template->name = $request->name;
+            $template->share = $request->share;
+                // save image
+            $image = $request->file('image');
+            $filename = time().'.'.$image->extension();
+            $template->filelink = $filename;
             $template->save();
             $category = Category::find($request->category_id);
             $location = public_path('images/templates/'.$category->name.'/'.$filename);
             Image::make($image)->save($location);
-        } catch(QueryException $e) {
+        } catch(\Throwable $e) {
             return json_encode(['fail' => $e->getMessage()]);
         }
 
@@ -88,7 +123,7 @@ class ImageController extends Controller
                 $category = Category::find($template->category_id);
                 $location = public_path('images/meme/'.$category->name.'/'.$filename);
                 Image::make($image)->save($location);
-            } catch(QueryException $e) {
+            } catch(\Throwable $e) {
                 return json_encode(['fail' => $e->getMessage()]);
             }
 
