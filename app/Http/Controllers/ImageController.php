@@ -29,7 +29,7 @@ class ImageController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return json_encode(['failed' => 'post template failed']);
+            return json_encode(['failed' => 'post validation failed']);
         }
 
         // search data
@@ -67,7 +67,7 @@ class ImageController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return json_encode(['failed' => 'post template failed']);
+            return json_encode(['failed' => 'post validation failed']);
         }
 
         // post data
@@ -105,7 +105,7 @@ class ImageController extends Controller
                 'meme_share' => 'required|boolean'
             ]);
             if ($validator->fails()) {
-                return json_encode(['failed' => 'post template failed']);
+                return json_encode(['failed' => 'post validation failed']);
             }
 
             // post meme data
@@ -139,7 +139,7 @@ class ImageController extends Controller
                 'template_image' => 'required|image'
             ]);
             if ($validator->fails()) {
-                return json_encode(['failed' => 'post template failed']);
+                return json_encode(['failed' => 'post validation failed']);
             }
             
             DB::beginTransaction();
