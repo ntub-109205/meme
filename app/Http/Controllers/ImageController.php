@@ -9,6 +9,7 @@ use Auth;
 use App\Template;
 use App\Category;
 use App\Meme;
+use App\Tag;
 use Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
@@ -136,14 +137,16 @@ class ImageController extends Controller
                 'category_id' => ['required', Rule::In(['1', '2'])],
                 'template_name' => 'required|max:255',
                 'template_share' => 'required|boolean',
-                'template_image' => 'required|image'
+                'template_image' => 'required|image',
+                'tags' => 'required|array'
             ]);
             if ($validator->fails()) {
                 return json_encode(['failed' => 'post validation failed']);
             }
             
-            DB::beginTransaction();
+            /*DB::beginTransaction();
             try {
+                
                 // post template data
                 $template = new Template;
                 $template->user_id = Auth::guard('web')->user()->id;
@@ -166,6 +169,24 @@ class ImageController extends Controller
                 $filename = time().'.'.$meme_image->extension();
                 $meme->filelink = $filename;
                 $meme->save();
+                */
+                // post tags data
+                for ($i = 0; $i < count($request->tags); $i++) {                 
+                    DB::statement("
+                        INSERT INTO `tags`(`name`) SELECT :name FROM `tags`
+                        WHERE NOT EXISTS(
+                            SELECT `name` FROM `tags`
+                            WHERE `name` = ':name'
+                        )", ['name' => $request->tags[$i]]
+                    );
+                }
+                //$tags = Tag::select('id')->where('name', $request->tags);
+                //print_r($tags);
+
+                /*
+                $post->tags()->sync($request->tags, false);
+                $meme->tags()->sync()
+
                 DB::commit();
             } catch (\Throwable $e) {
                 DB::rollback();
@@ -179,6 +200,8 @@ class ImageController extends Controller
             Image::make($meme_image)->save($location);
 
             return json_encode(['success' => 'your posts has been successfully saved!']);
+            */
+            
         }
     }
 }
