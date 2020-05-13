@@ -74,7 +74,7 @@ class ImageController extends Controller
         // post data
         try {
             $template = new Template;
-            $template->user_id = Auth::guard('web')->user()->id;
+            $template->user_id = Auth::guard('api')->user()->id;
             $template->category_id = $request->category_id;
             $template->name = $request->name;
             $template->share = $request->share;
@@ -111,7 +111,7 @@ class ImageController extends Controller
 
             // post meme data
             $meme = new Meme;
-            $meme->user_id = Auth::guard('web')->user()->id;
+            $meme->user_id = Auth::guard('api')->user()->id;
             $meme->template_id = $request->template_id;
             $meme->share = $request->meme_share;
                 // save image
@@ -149,7 +149,7 @@ class ImageController extends Controller
                 
                 // post template data
                 $template = new Template;
-                $template->user_id = Auth::guard('web')->user()->id;
+                $template->user_id = Auth::guard('api')->user()->id;
                 $template->category_id = $request->category_id;
                 $template->name = $request->template_name;
                 $template->share = $request->template_share;
@@ -161,7 +161,7 @@ class ImageController extends Controller
 
                 // post meme data
                 $meme = new Meme;
-                $meme->user_id = Auth::guard('web')->user()->id;
+                $meme->user_id = Auth::guard('api')->user()->id;
                 $meme->template_id = $template->id;
                 $meme->share = $request->meme_share;
                     // save image

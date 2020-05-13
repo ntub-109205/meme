@@ -25,8 +25,8 @@ Route::group(['middleware' => 'auth:api'], function(){
 	Route::post('details', 'API\UserController@details')->name('api_details');;
 });
 
-Route::get('/login', 'Auth\LoginController@showLoginForm')->name('login');
-Route::post('/login', 'Auth\LoginController@login');
+//Route::get('/login', 'Auth\LoginController@showLoginForm')->name('login');
+//Route::post('/login', 'Auth\LoginController@login');
 Route::post('/logout', 'Auth\LoginController@logout')->name('logout');
 
 Route::prefix('template')->group(function () {
