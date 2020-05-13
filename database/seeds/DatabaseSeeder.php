@@ -18,5 +18,19 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('10836023'),
             'saved' => json_encode(['meme' => [], 'templates' => []])
         ]);
+
+        User::create([
+            'name' => 'kevin',
+            'email'    => 'kevin0507a@gmail.com',
+            'password' => Hash::make('wedxzas12345'),
+            'saved' => json_encode(['meme' => [], 'templates' => []])
+        ]);
+
+        User::create([
+            'name' => 'test',
+            'email'    => 'test@example.com',
+            'password' => Hash::make('00000000'),
+            'saved' => json_encode(['meme' => [], 'templates' => []])
+        ]);
     }
 }
