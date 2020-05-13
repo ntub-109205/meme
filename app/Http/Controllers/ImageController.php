@@ -18,7 +18,7 @@ class ImageController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth');
+        $this->middleware('api');
     }
 
     // 查詢最多人使用且公開的模板

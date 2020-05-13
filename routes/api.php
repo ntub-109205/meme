@@ -18,10 +18,20 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// 待改
 Route::post('login', 'API\UserController@login')->name('api_login');
 
 // Route::post('register', 'API\UserController@register');
 Route::group(['middleware' => 'auth:api'], function(){
 	Route::post('details', 'API\UserController@details')->name('api_details');;
 });
+
+Route::get('/login', 'Auth\LoginController@showLoginForm')->name('login');
+Route::post('/login', 'Auth\LoginController@login');
+Route::post('/logout', 'Auth\LoginController@logout')->name('logout');
+
+Route::prefix('template')->group(function () {
+	Route::post('/store', 'ImageController@templateStore')->name('templateStore');
+	Route::post('/show', 'ImageController@templateShow')->name('templateShow');
+});
+
+Route::post('/meme/store', 'ImageController@memeStore')->name('memeStore');
