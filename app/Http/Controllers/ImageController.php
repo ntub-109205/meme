@@ -45,7 +45,6 @@ class ImageController extends Controller
                 ON m.`template_id` = t.`id`
                 WHERE t.`category_id` = :category_id
                 AND t.`share` = 1
-                AND m.`share` = 1
                 GROUP BY m.`template_id`, `filelink`, t.`name`
                 ORDER BY COUNT(m.`template_id`) DESC
                 ", ['category_id' => $request->category_id]
