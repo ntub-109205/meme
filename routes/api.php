@@ -40,6 +40,7 @@ Route::group(['middleware' => 'auth:api'], function(){
 Route::prefix('template')->group(function () {
 	Route::post('/store', 'API\TemplateController@store')->name('api_template_store');
 	Route::post('/show', 'API\TemplateController@show')->name('api_template_show');
+	Route::post('/test/store', 'API\TemplateController@testStore');
 });
 
 /*

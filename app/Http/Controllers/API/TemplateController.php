@@ -91,4 +91,29 @@ class TemplateController extends Controller
 
         return json_encode(['success' => 'your posts has been successfully saved!']);
     }
+
+    public function testStore(Request $request)
+    {
+    	$validator = Validator::make($request->all(), [
+            'image' => 'required|image',
+        ]);
+        
+        if ($validator->fails()) {
+            return json_encode(['failed' => 'post validation failed']);
+        }
+
+        try {
+            // save image
+            $image = $request->file('image');
+            $filename = time().'.'.$image->extension();
+            $category = Category::find($request->category_id);
+            $location = public_path('images/templates/meme/'.$filename);
+            Image::make($image)->save($location);
+        } catch(\Throwable $e) {
+            return json_encode(['fail' => $e->getMessage()]);
+        }
+
+        return json_encode(['success' => 'your posts has been successfully saved!']);
+    }
+
 }
