@@ -10,7 +10,11 @@ use Validator;
 
 class UserController extends Controller
 {
-	/** 
+    public function __construct() {
+        $this->middleware('auth:api')->except('login');
+    }
+
+    /** 
      * login api 
      * 
      * @return \Illuminate\Http\Response 

@@ -18,20 +18,35 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post('login', 'API\UserController@login')->name('api_login');
+Route::get('/login', 'Auth\LoginController@showLoginForm')->name('login');
 
+/*
+|------------------------------------
+| login api
+|------------------------------------
+*/
+Route::post('/login', 'API\UserController@login')->name('api_login');
 // Route::post('register', 'API\UserController@register');
 Route::group(['middleware' => 'auth:api'], function(){
-	Route::post('details', 'API\UserController@details')->name('api_details');;
+	Route::post('/details', 'API\UserController@details')->name('api_details');
 });
 
-//Route::get('/login', 'Auth\LoginController@showLoginForm')->name('login');
-//Route::post('/login', 'Auth\LoginController@login');
-Route::post('/logout', 'Auth\LoginController@logout')->name('logout');
 
+/*
+|------------------------------------
+| template api
+|------------------------------------
+*/
 Route::prefix('template')->group(function () {
-	Route::post('/store', 'ImageController@templateStore')->name('templateStore');
-	Route::post('/show', 'ImageController@templateShow')->name('templateShow');
+	Route::post('/store', 'API\TemplateController@store')->name('api_template_store');
+	Route::post('/show', 'API\TemplateController@show')->name('api_template_show');
 });
 
-Route::post('/meme/store', 'ImageController@memeStore')->name('memeStore');
+/*
+|------------------------------------
+| image api
+|------------------------------------
+*/
+Route::prefix('meme')->group(function () {
+	Route::post('/store', 'API\ImageController@store')->name('api_meme_store');
+});
