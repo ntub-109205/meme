@@ -120,4 +120,22 @@ class TemplateController extends Controller
         $img->save('foo.jpg');*/
     }
 
+    public function info(Request $request) {
+        $validator = Validator::make($request->all(), [
+            'template_id' => 'required|numeric',
+        ]);
+        
+        if ($validator->fails()) {
+            return json_encode(['failed' => 'post validation failed']);
+        }
+    }
+
+    public function saved(Request $request) {
+
+    }
+
+    public function ref(Request $request) {
+
+    }
+
 }

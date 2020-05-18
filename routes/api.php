@@ -41,6 +41,9 @@ Route::prefix('template')->group(function () {
 	Route::post('/store', 'API\TemplateController@store')->name('api_template_store');
 	Route::post('/show', 'API\TemplateController@show')->name('api_template_show');
 	Route::post('/test/store', 'API\TemplateController@testStore');
+	Route::post('/info', 'API\TemplateController@info');
+	Route::post('/saved', 'API\TemplateController@saved');
+	Route::post('/ref', 'API\TemplateController@ref');
 });
 
 /*
