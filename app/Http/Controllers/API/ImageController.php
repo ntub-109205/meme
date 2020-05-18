@@ -29,37 +29,54 @@ class ImageController extends Controller
             // validate data
             $validator = Validator::make($request->all(), [
                 'template_id' => 'numeric|required',
-                // 缺tag
                 'meme_image' => 'required|image',
-                'meme_share' => 'required|boolean'
+                'meme_share' => 'required|boolean',
+                'tags' => 'required|array'
             ]);
             if ($validator->fails()) {
                 return json_encode(['failed' => 'post validation failed']);
             }
 
-            // post meme data
-            $meme = new Meme;
-            $meme->user_id = Auth::guard('api')->user()->id;
-            $meme->template_id = $request->template_id;
-            $meme->share = $request->meme_share;
-                // save image
-            $image = $request->file('meme_image');
-            $filename = time().'.'.$image->extension();
-            $meme->filelink = $filename;
+            DB::beginTransaction();
             try {
+                // post tag data
+                $tag_id = [];
+                for ($i = 0; $i < count($request->tags); $i++) {
+                    $tag = Tag::select('id')->where('name', $request->tags[$i])->first();
+                    if ($tag == "") {
+                        $tag = new Tag;
+                        $tag->name = $request->tags[$i];
+                        $tag->save();
+                    }
+                    array_push($tag_id, $tag->id);
+                }
+
+                // post meme data
+                $meme = new Meme;
+                $meme->user_id = Auth::guard('api')->user()->id;
+                $meme->template_id = $request->template_id;
+                $meme->share = $request->meme_share;
+                    // save image
+                $image = $request->file('meme_image');
+                $filename = time().'.'.$image->extension();
+                $meme->filelink = $filename;
                 $meme->save();
+
+                // many to many
+                $meme->tags()->sync($tag_id, false);
                 $template = Template::find($request->template_id);
                 $category = Category::find($template->category_id);
                 $location = public_path('images/meme/'.$category->name.'/'.$filename);
                 Image::make($image)->save($location);
+                DB::commit();
             } catch(\Throwable $e) {
+                DB::rollback();
                 return json_encode(['fail' => $e->getMessage()]);
             }
 
             return json_encode(['success' => 'your posts has been successfully saved!']);
         } else {
             $validator = Validator::make($request->all(), [
-                // 缺tag
                 'meme_image' => 'required|image',
                 'meme_share' => 'required|boolean',
                 'category_id' => ['required', Rule::In(['1', '2'])],
@@ -72,9 +89,19 @@ class ImageController extends Controller
                 return json_encode(['failed' => 'post validation failed']);
             }
             
-            /*DB::beginTransaction();
+            DB::beginTransaction();
             try {
-                
+                // post tags data
+                $tag_id = [];
+                for ($i = 0; $i < count($request->tags); $i++) {
+                    $tag = Tag::select('id')->where('name', $request->tags[$i])->first();
+                    if ($tag == "") {
+                        $tag = new Tag;
+                        $tag->name = $request->tags[$i];
+                        $tag->save();
+                    }
+                    array_push($tag_id, $tag->id);
+                }
                 // post template data
                 $template = new Template;
                 $template->user_id = Auth::guard('api')->user()->id;
@@ -97,26 +124,8 @@ class ImageController extends Controller
                 $filename = time().'.'.$meme_image->extension();
                 $meme->filelink = $filename;
                 $meme->save();
-                */
-                // post tags data
-                for ($i = 0; $i < count($request->tags); $i++) {                 
-                    DB::statement("
-                        INSERT INTO `tags`(`name`) SELECT :name FROM `tags`
-                        WHERE NOT EXISTS(
-                            SELECT `name` FROM `tags`
-                            WHERE `name` = ':name'
-                        )", ['name' => $request->tags[$i]]
-                    );
-                }
-                
-                echo "hi";
-                //$tags = Tag::select('id')->where('name', $request->tags);
-                //print_r($tags);
 
-                /*
-                $post->tags()->sync($request->tags, false);
-                $meme->tags()->sync()
-
+                $meme->tags()->sync($tag_id, false);
                 DB::commit();
             } catch (\Throwable $e) {
                 DB::rollback();
@@ -130,8 +139,6 @@ class ImageController extends Controller
             Image::make($meme_image)->save($location);
 
             return json_encode(['success' => 'your posts has been successfully saved!']);
-            */
-            
         }
     }
 }

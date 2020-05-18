@@ -114,6 +114,10 @@ class TemplateController extends Controller
         }
 
         return json_encode(['success' => 'your posts has been successfully saved!']);
+
+        /*$img = Image::make('foo.jpg');
+        $img->getCore()->vignetteImage();
+        $img->save('foo.jpg');*/
     }
 
 }
