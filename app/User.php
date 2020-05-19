@@ -47,4 +47,9 @@ class User extends Authenticatable
     {
         return $this->hasMany('App\Template');
     }
+
+    public function temp()
+    {
+        return $this->hasOne('App\Temp');
+    }
 }

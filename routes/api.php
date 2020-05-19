@@ -39,11 +39,18 @@ Route::group(['middleware' => 'auth:api'], function(){
 */
 Route::prefix('template')->group(function () {
 	Route::post('/store', 'API\TemplateController@store')->name('api_template_store');
+	Route::post('/imageStore', 'API\TemplateController@imageStore');
+
 	Route::post('/show', 'API\TemplateController@show')->name('api_template_show');
 	Route::post('/test/store', 'API\TemplateController@testStore');
 	Route::post('/info', 'API\TemplateController@info');
 	Route::post('/saved', 'API\TemplateController@saved');
 	Route::post('/ref', 'API\TemplateController@ref');
+
+});
+
+Route::prefix('txt')->group(function () {
+	Route::post('/templateStore', 'API\txtController@templateStore');
 });
 
 /*
