@@ -11,6 +11,7 @@ use App\Template;
 use App\Category;
 use App\Meme;
 use App\Tag;
+use App\Temp;
 use Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
@@ -60,9 +61,6 @@ class TemplateController extends Controller
     {
         // validate data
         $validator = Validator::make($request->all(), [
-            'category_id' => ['required', Rule::In(['1', '2'])],
-            'name' => 'required|max:255',
-            'share' => 'required|boolean',
             'image' => 'required|image'
         ]);
 
@@ -70,54 +68,56 @@ class TemplateController extends Controller
             return json_encode(['failed' => 'post validation failed']);
         }
 
+        if ($temp = Temp::where('user_id', Auth::guard('api')->user()->id)->count() == 0) {
+            return json_encode(['failed' => 'there has no template data']);
+        }
+
         // post data
+        $temp = Temp::select('data')->where('user_id', Auth::guard('api')->user()->id)->first();
+        $data = json_decode($temp->data);
+        DB::beginTransaction();
         try {
             $template = new Template;
             $template->user_id = Auth::guard('api')->user()->id;
-            $template->category_id = $request->category_id;
-            $template->name = $request->name;
-            $template->share = $request->share;
+            $template->category_id = $data->category_id;
+            $template->name = $data->name;
+            $template->share = $data->share;
                 // save image
             $image = $request->file('image');
             $filename = time().'.'.$image->extension();
             $template->filelink = $filename;
             $template->save();
-            $category = Category::find($request->category_id);
+            $category = Category::find($data->category_id);
             $location = public_path('images/templates/'.$category->name.'/'.$filename);
             Image::make($image)->save($location);
+
+                // delete temp data 
+            $deletedTemp = Temp::where('user_id', Auth::guard('api')->user()->id)->delete();
+            DB::commit();
         } catch(\Throwable $e) {
-            return json_encode(['fail' => $e->getMessage()]);
+            DB::rollback();
+            return json_encode(['failed' => $e->getMessage()]);
         }
 
         return json_encode(['success' => 'your posts has been successfully saved!']);
     }
 
-    public function testStore(Request $request)
-    {
-    	$validator = Validator::make($request->all(), [
-            'image' => 'required|image',
+    public function info(Request $request) {
+        $validator = Validator::make($request->all(), [
+            'template_id' => 'required|numeric',
         ]);
         
         if ($validator->fails()) {
             return json_encode(['failed' => 'post validation failed']);
         }
+    }
 
-        try {
-            // save image
-            $image = $request->file('image');
-            $filename = time().'.'.$image->extension();
-            $category = Category::find($request->category_id);
-            $location = public_path('images/templates/meme/'.$filename);
-            Image::make($image)->save($location);
-        } catch(\Throwable $e) {
-            return json_encode(['fail' => $e->getMessage()]);
-        }
+    public function saved(Request $request) {
 
-        return json_encode(['success' => 'your posts has been successfully saved!']);
+    }
 
-        /*$img = Image::make('foo.jpg');
-        $img->getCore()->vignetteImage();
-        $img->save('foo.jpg');*/
+    public function ref(Request $request) {
+
     }
 
 }
