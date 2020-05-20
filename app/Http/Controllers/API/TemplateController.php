@@ -40,13 +40,13 @@ class TemplateController extends Controller
             $path = url('/images/templates/');
             $template = DB::select(
                 "
-                SELECT m.`template_id`, CONCAT('$path/', '$category->name/', t.`filelink`) AS `filelink`, t.`name`, COUNT(m.`template_id`) AS `count`
-                FROM `meme` m
-                INNER JOIN `templates` t
-                ON m.`template_id` = t.`id`
+                SELECT t.`id`, CONCAT('$path/', '$category->name/', t.`filelink`) AS `filelink`, t.`name`, COUNT(m.`template_id`) AS `count`
+                FROM `templates` t
+                LEFT JOIN `meme` m
+                ON t.`id` = m.`template_id`
                 WHERE t.`category_id` = :category_id
                 AND t.`share` = 1
-                GROUP BY m.`template_id`, `filelink`, t.`name`
+                GROUP BY t.`id`, `filelink`, t.`name`
                 ORDER BY COUNT(m.`template_id`) DESC
                 ", ['category_id' => $request->category_id]
             );
