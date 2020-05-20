@@ -104,6 +104,38 @@ class TxtController extends Controller
 	        	if ($validator->fails()) {
 	            	return json_encode(['failed' => 'post validation failed']);
 	        	}
+
+	        	DB::beginTransaction();
+	        	try {
+	        		$tag_id = [];
+		            for ($i = 0; $i < count($request->tags); $i++) {
+		                $tag = Tag::select('id')->where('name', $request->tags[$i])->first();
+		                if ($tag == "") {
+		                    $tag = new Tag;
+		                    $tag->name = $request->tags[$i];
+		                    $tag->save();
+		                }
+		                array_push($tag_id, $tag->id);
+		            }
+
+		            $temp = new Temp;
+		            $temp->user_id = Auth::guard('api')->user()->id;
+		            $temp->data = json_encode(
+		        		[
+		            		'meme_share' => $request->meme_share,
+		            		'category_id' => $request->category_id,
+		            		'template_name' => $request->template_name,
+		            		'template_share' => $request->template_share,
+		            		'tags' => $tag_id
+		            	]
+		            );
+		            $temp->save();
+	        		DB::commit();
+	        		return json_encode(['success' => 'your posts has been successfully saved!']);
+	        	} catch (\Throwable $e) {
+					DB::rollback();
+					return json_encode(['failed' => $e->getMessage()]);
+	        	}
 	        }
 	    } else {
 	    	return json_encode(['failed' => 'this user still has a temperate  data']);

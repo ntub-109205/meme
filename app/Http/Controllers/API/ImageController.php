@@ -81,23 +81,12 @@ class ImageController extends Controller
             
             DB::beginTransaction();
             try {
-                // post tags data
-                $tag_id = [];
-                for ($i = 0; $i < count($request->tags); $i++) {
-                    $tag = Tag::select('id')->where('name', $request->tags[$i])->first();
-                    if ($tag == "") {
-                        $tag = new Tag;
-                        $tag->name = $request->tags[$i];
-                        $tag->save();
-                    }
-                    array_push($tag_id, $tag->id);
-                }
                 // post template data
                 $template = new Template;
                 $template->user_id = Auth::guard('api')->user()->id;
-                $template->category_id = $request->category_id;
-                $template->name = $request->template_name;
-                $template->share = $request->template_share;
+                $template->category_id = $data->category_id;
+                $template->name = $data->template_name;
+                $template->share = $data->template_share;
                     // save image
                 $template_image = $request->file('template_image');
                 $filename = time().'.'.$template_image->extension();
@@ -108,27 +97,31 @@ class ImageController extends Controller
                 $meme = new Meme;
                 $meme->user_id = Auth::guard('api')->user()->id;
                 $meme->template_id = $template->id;
-                $meme->share = $request->meme_share;
+                $meme->share = $data->meme_share;
                     // save image
                 $meme_image = $request->file('meme_image');
                 $filename = time().'.'.$meme_image->extension();
                 $meme->filelink = $filename;
                 $meme->save();
 
-                $meme->tags()->sync($tag_id, false);
+                $meme->tags()->sync($data->tags, false);
+                // delete temp data 
+                $deletedTemp = Temp::where('user_id', Auth::guard('api')->user()->id)->delete();
                 DB::commit();
+                $category = Category::find($data->category_id);
+                $location = public_path('images/templates/'.$category->name.'/'.$filename);
+                Image::make($template_image)->save($location);
+                $location = public_path('images/meme/'.$category->name.'/'.$filename);
+                Image::make($meme_image)->save($location);
+
+                return json_encode(['success' => 'your posts has been successfully saved!']);
             } catch (\Throwable $e) {
                 DB::rollback();
                 return json_encode(['failed' => $e->getMessage()]);
-            }
-
-            $category = Category::find($request->category_id);
-            $location = public_path('images/templates/'.$category->name.'/'.$filename);
-            Image::make($template_image)->save($location);
-            $location = public_path('images/meme/'.$category->name.'/'.$filename);
-            Image::make($meme_image)->save($location);
-
-            return json_encode(['success' => 'your posts has been successfully saved!']);
+                // delete temp data 
+                $deletedTemp = Temp::where('user_id', Auth::guard('api')->user()->id)->delete();
+                return json_encode(['failed' => $e->getMessage()]);
+            }     
         }
     }
 }
