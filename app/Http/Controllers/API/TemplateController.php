@@ -96,6 +96,8 @@ class TemplateController extends Controller
             DB::commit();
         } catch(\Throwable $e) {
             DB::rollback();
+            // delete temp data 
+            $deletedTemp = Temp::where('user_id', Auth::guard('api')->user()->id)->delete();
             return json_encode(['failed' => $e->getMessage()]);
         }
 
