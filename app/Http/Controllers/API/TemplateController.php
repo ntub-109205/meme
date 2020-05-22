@@ -70,7 +70,7 @@ class TemplateController extends Controller
                     ON t.`id` = m.`template_id`
                     WHERE t.`category_id` = :category_id
                     AND t.`share` = 1
-                    GROUP BY t.`id`, `filelink`, t.`name`
+                    GROUP BY t.`id`, `filelink`, t.`name`, u.`name`, t.`created_at`
                     ORDER BY t.`created_at` DESC
                     ", ['category_id' => $request->category_id]
                 );
