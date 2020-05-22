@@ -27,33 +27,57 @@ class TemplateController extends Controller
     {
         // validate data
         $validator = Validator::make($request->all(), [
-            'category_id' => ['required', Rule::In(['1', '2'])]
+            'category_id' => ['required', Rule::In(['1', '2'])],
+            'time' => 'sometimes|boolean'
         ]);
 
         if ($validator->fails()) {
             return json_encode(['failed' => 'post validation failed']);
         }
 
-        // search data
-        try {
-            $category = Category::find($request->category_id);
-            $path = url('/images/templates/');
-            $template = DB::select(
-                "
-                SELECT t.`id`, CONCAT('$path/', '$category->name/', t.`filelink`) AS `filelink`, t.`name`, COUNT(m.`template_id`) AS `count`
-                FROM `templates` t
-                LEFT JOIN `meme` m
-                ON t.`id` = m.`template_id`
-                WHERE t.`category_id` = :category_id
-                AND t.`share` = 1
-                GROUP BY t.`id`, `filelink`, t.`name`
-                ORDER BY COUNT(m.`template_id`) DESC
-                ", ['category_id' => $request->category_id]
-            );
-        } catch(\Throwable $e) {
-            return json_encode(['fail' => $e->getMessage()]);
+        if (!isset($request->time)) {
+            try {
+                $category = Category::find($request->category_id);
+                $path = url('/images/templates/');
+                $template = DB::select(
+                    "
+                    SELECT t.`id`, CONCAT('$path/', '$category->name/', t.`filelink`) AS `filelink`, t.`name`, u.`name` AS `author`, COUNT(m.`template_id`) AS `count`
+                    FROM `templates` t
+                    INNER JOIN `users` u
+                    ON t.`user_id` = u.`id`
+                    LEFT JOIN `meme` m
+                    ON t.`id` = m.`template_id`
+                    WHERE t.`category_id` = :category_id
+                    AND t.`share` = 1
+                    GROUP BY t.`id`, `filelink`, t.`name`
+                    ORDER BY COUNT(m.`template_id`) DESC
+                    ", ['category_id' => $request->category_id]
+                );
+            } catch(\Throwable $e) {
+                return json_encode(['fail' => $e->getMessage()]);
+            }
+        } else {
+            try {
+                $category = Category::find($request->category_id);
+                $path = url('/images/templates/');
+                $template = DB::select(
+                    "
+                    SELECT t.`id`, CONCAT('$path/', '$category->name/', t.`filelink`) AS `filelink`, t.`name`, u.`name` AS `author`, COUNT(m.`template_id`) AS `count`, t.`created_at`
+                    FROM `templates` t
+                    INNER JOIN `users` u
+                    ON t.`user_id` = u.`id`
+                    LEFT JOIN `meme` m
+                    ON t.`id` = m.`template_id`
+                    WHERE t.`category_id` = :category_id
+                    AND t.`share` = 1
+                    GROUP BY t.`id`, `filelink`, t.`name`
+                    ORDER BY t.`created_at` DESC
+                    ", ['category_id' => $request->category_id]
+                );
+            } catch(\Throwable $e) {
+                return json_encode(['fail' => $e->getMessage()]);
+            }
         }
-
         return json_encode(['templates' => $template]);
     }
 
@@ -104,7 +128,7 @@ class TemplateController extends Controller
         return json_encode(['success' => 'your posts has been successfully saved!']);
     }
 
-    public function info(Request $request) {
+    public function savedStatus(Request $request) {
         $validator = Validator::make($request->all(), [
             'template_id' => 'required|numeric',
         ]);
