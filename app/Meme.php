@@ -22,4 +22,9 @@ class Meme extends Model
     {
         return $this->belongsTo('App\Template');
     }
+
+    public function thumb_users()
+    {
+        return $this->belongsToMany('App\User');
+    }
 }

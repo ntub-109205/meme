@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddForeignKeyToUserMemeUserId extends Migration
+class AddForeignKeyToMemeUserMemeId extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,9 @@ class AddForeignKeyToUserMemeUserId extends Migration
      */
     public function up()
     {
-        Schema::table('user_meme', function (Blueprint $table) {
-            $table->foreign('user_id')
-                  ->references('id')->on('users')
+        Schema::table('meme_user', function (Blueprint $table) {
+            $table->foreign('meme_id')
+                  ->references('id')->on('meme')
                   ->onDelete('restrict')
                   ->onUpdate('restrict');
         });
@@ -28,8 +28,8 @@ class AddForeignKeyToUserMemeUserId extends Migration
      */
     public function down()
     {
-        Schema::table('user_meme', function (Blueprint $table) {
-            $table->dropForeign(['user_id']);
+        Schema::table('meme_user', function (Blueprint $table) {
+            $table->dropForeign(['meme_id']);
         });
     }
 }

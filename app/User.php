@@ -43,6 +43,11 @@ class User extends Authenticatable
         return $this->hasMany('App\Meme');
     }
 
+    public function thumb_meme()
+    {
+        return $this->belongsToMany('App\Meme');
+    }
+
     public function templates()
     {
         return $this->hasMany('App\Template');

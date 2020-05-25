@@ -99,7 +99,7 @@ class TxtController extends Controller
 		            'category_id' => ['required', Rule::In(['1', '2'])],
 		            'template_name' => 'required|max:255',
 	                'template_share' => 'required|boolean',
-		            'tags' => 'required|array'
+		            //'tags' => 'required|array'
 		        ]);
 	        	if ($validator->fails()) {
 	            	return json_encode(['failed' => 'post validation failed']);
@@ -107,7 +107,7 @@ class TxtController extends Controller
 
 	        	DB::beginTransaction();
 	        	try {
-	        		$tag_id = [];
+	        		/*$tag_id = [];
 		            for ($i = 0; $i < count($request->tags); $i++) {
 		                $tag = Tag::select('id')->where('name', $request->tags[$i])->first();
 		                if ($tag == "") {
@@ -116,7 +116,7 @@ class TxtController extends Controller
 		                    $tag->save();
 		                }
 		                array_push($tag_id, $tag->id);
-		            }
+		            }*/
 
 		            $temp = new Temp;
 		            $temp->user_id = Auth::guard('api')->user()->id;
@@ -126,7 +126,7 @@ class TxtController extends Controller
 		            		'category_id' => $request->category_id,
 		            		'template_name' => $request->template_name,
 		            		'template_share' => $request->template_share,
-		            		'tags' => $tag_id
+		            		//'tags' => $tag_id
 		            	]
 		            );
 		            $temp->save();

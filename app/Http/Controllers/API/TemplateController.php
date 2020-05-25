@@ -16,6 +16,7 @@ use Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Arr;
+use App\User;
 
 class TemplateController extends Controller
 {
@@ -131,7 +132,7 @@ class TemplateController extends Controller
 
     public function savedStatus(Request $request) {
         $validator = Validator::make($request->all(), [
-            'template_id' => 'required|numeric',
+            'template_id' => 'required|numeric'
         ]);
         
         if ($validator->fails()) {
@@ -148,9 +149,7 @@ class TemplateController extends Controller
             }  
         } catch(\Throwable $e) {
             return json_encode(['failed' => $e->getMessage()]);
-        }
-
-        
+        } 
     }
 
     public function saved(Request $request) { 
@@ -195,8 +194,32 @@ class TemplateController extends Controller
         
     }
 
-    public function ref(Request $request) {
+    public function meme(Request $request) {
+        /*$user = Meme::find(1)->thumb_users();
+        print_r($user->count());*/
 
+        $user = Auth::guard('api')->user()->thumb_meme();
+        print_r($user->count());
+    }
+
+    public function thumb(Request $request) {
+        $validator = Validator::make($request->all(), [
+            'meme_id' => 'required|numeric',
+        ]);
+        
+        if ($validator->fails()) {
+            return json_encode(['failed' => 'post validation failed']);
+        }
+
+        /*try {
+            Auth::guard('api')->user()->thumb_meme()->sync($request->meme_id, false);
+            return json_encode(['success' => 'your posts has been successfully saved!']);
+        } catch(\Throwable $e) {
+            return json_encode(['failed' => $e->getMessage()]);
+        }*/
+        $a = Auth::guard('api')->user()->thumb_meme()->get();
+        var_dump($a);
+        //return json_encode(['success' => 'your posts has been successfully saved!']);
     }
 
 }

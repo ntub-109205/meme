@@ -104,7 +104,7 @@ class ImageController extends Controller
                 $meme->filelink = $filename;
                 $meme->save();
 
-                $meme->tags()->sync($data->tags, false);
+                //$meme->tags()->sync($data->tags, false);
                 // delete temp data 
                 $deletedTemp = Temp::where('user_id', Auth::guard('api')->user()->id)->delete();
                 DB::commit();
