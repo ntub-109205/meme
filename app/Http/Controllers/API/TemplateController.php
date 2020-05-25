@@ -137,12 +137,20 @@ class TemplateController extends Controller
         if ($validator->fails()) {
             return json_encode(['failed' => 'post validation failed']);
         }
-        
-        $saved = json_decode(Auth::guard('api')->user()->saved, true);
-        if (Arr::exists($saved['templates'], $request->template_id)) {
-            return json_encode(['saved' => '1']);   
+
+        try {
+            if (Template::find($request->template_id)->count() != 0) {
+                $saved = json_decode(Auth::guard('api')->user()->saved, true);
+                if (Arr::exists($saved['templates'], $request->template_id)) {
+                    return json_encode(['saved' => '1']);   
+                }
+                return json_encode(['saved' => '0']);
+            }  
+        } catch(\Throwable $e) {
+            return json_encode(['failed' => $e->getMessage()]);
         }
-        return json_encode(['saved' => '0']);
+
+        
     }
 
     public function saved(Request $request) { 
@@ -159,24 +167,32 @@ class TemplateController extends Controller
 
         // 驗證狀態
         $status = 0;
-        if (Arr::exists($saved['templates'], $request->template_id)) {
-            $status = 1;
+        try {
+            if (Template::find($request->template_id)->count() != 0) {
+                $saved = json_decode(Auth::guard('api')->user()->saved, true);
+                if (Arr::exists($saved['templates'], $request->template_id)) {
+                    $status = 1;  
+                }
+                if ($status) {
+                    try {
+                        unset($saved['templates'][$request->template_id]);
+                        $user->saved = json_encode($saved);
+                        $user->save();
+                        return json_encode(['saved' => '0']);
+                    } catch(\Throwable $e) {
+                        return json_encode(['failed' => $e->getMessage()]);
+                    }
+                } else {
+                    $saved['templates'] = Arr::add($saved['templates'], $request->template_id, '1');
+                    $user->saved = json_encode($saved);
+                    $user->save();
+                    return json_encode(['saved' => '1']);      
+                }
+            }  
+        } catch(\Throwable $e) {
+            return json_encode(['failed' => $e->getMessage()]);
         }
-        if ($status) {
-            try {
-                unset($saved['templates'][$request->template_id]);
-                $user->saved = json_encode($saved);
-                $user->save();
-                return json_encode(['saved' => '0']);
-            } catch(\Throwable $e) {
-                return json_encode(['failed' => $e->getMessage()]);
-            }
-        } else {
-            $saved['templates'] = Arr::add($saved['templates'], $request->template_id, '1');
-            $user->saved = json_encode($saved);
-            $user->save();
-            return json_encode(['saved' => '1']);      
-        }
+        
     }
 
     public function ref(Request $request) {
