@@ -15,6 +15,7 @@ use App\Temp;
 use Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Arr;
 
 class TemplateController extends Controller
 {
@@ -49,7 +50,7 @@ class TemplateController extends Controller
                     ON t.`id` = m.`template_id`
                     WHERE t.`category_id` = :category_id
                     AND t.`share` = 1
-                    GROUP BY t.`id`, `filelink`, t.`name`
+                    GROUP BY t.`id`, `filelink`, t.`name`, u.`name`
                     ORDER BY COUNT(m.`template_id`) DESC
                     ", ['category_id' => $request->category_id]
                 );
@@ -136,10 +137,46 @@ class TemplateController extends Controller
         if ($validator->fails()) {
             return json_encode(['failed' => 'post validation failed']);
         }
+        
+        $saved = json_decode(Auth::guard('api')->user()->saved, true);
+        if (Arr::exists($saved['templates'], $request->template_id)) {
+            return json_encode(['saved' => '1']);   
+        }
+        return json_encode(['saved' => '0']);
     }
 
-    public function saved(Request $request) {
+    public function saved(Request $request) { 
+        $validator = Validator::make($request->all(), [
+            'template_id' => 'required|numeric',
+        ]);
+        
+        if ($validator->fails()) {
+            return json_encode(['failed' => 'post validation failed']);
+        }
 
+        $user = Auth::guard('api')->user();
+        $saved = json_decode($user->saved, true);
+
+        // 驗證狀態
+        $status = 0;
+        if (Arr::exists($saved['templates'], $request->template_id)) {
+            $status = 1;
+        }
+        if ($status) {
+            try {
+                unset($saved['templates'][$request->template_id]);
+                $user->saved = json_encode($saved);
+                $user->save();
+                return json_encode(['saved' => '0']);
+            } catch(\Throwable $e) {
+                return json_encode(['failed' => $e->getMessage()]);
+            }
+        } else {
+            $saved['templates'] = Arr::add($saved['templates'], $request->template_id, '1');
+            $user->saved = json_encode($saved);
+            $user->save();
+            return json_encode(['saved' => '1']);      
+        }
     }
 
     public function ref(Request $request) {
