@@ -45,7 +45,7 @@ Route::prefix('template')->group(function () {
 	Route::post('/test/store', 'API\TemplateController@testStore');
 	Route::post('/savedStatus', 'API\TemplateController@savedStatus');
 	Route::post('/saved', 'API\TemplateController@saved');
-	Route::get('/meme', 'API\TemplateController@meme');
+	Route::post('/meme', 'API\TemplateController@meme');
 	Route::post('/thumb', 'API\TemplateController@thumb');
 });
 

@@ -198,8 +198,36 @@ class TemplateController extends Controller
         /*$user = Meme::find(1)->thumb_users();
         print_r($user->count());*/
 
-        $user = Auth::guard('api')->user()->thumb_meme();
-        print_r($user->count());
+        /*$user = Auth::guard('api')->user()->thumb_meme();
+        print_r($user->count());*/
+
+        $validator = Validator::make($request->all(), [
+            'template_id' => 'required|numeric',
+        ]);
+        
+        if ($validator->fails()) {
+            return json_encode(['failed' => 'post validation failed']);
+        }
+
+        try {
+            $template = Template::find($request->template_id);
+            $category = Category::find($template->category_id);
+            $path = url('/images/meme/');
+            $meme = DB::select(
+                "
+                SELECT m.`id`, CONCAT('$path/', '$category->name/', m.`filelink`) AS `filelink`
+                FROM `meme` m
+                INNER JOIN `templates` t
+                ON m.`template_id` = t.`id`
+                WHERE m.`template_id` = :template_id
+                AND m.`share` = 1
+                AND t.`share` = 1
+                ", ['template_id' => $request->template_id]
+            );
+            return json_encode(['meme' => $meme]);
+        } catch(\Throwable $e) {
+            return json_encode(['fail' => $e->getMessage()]);
+        }
     }
 
     public function thumb(Request $request) {
