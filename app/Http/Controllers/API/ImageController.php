@@ -69,7 +69,38 @@ class ImageController extends Controller
         }
     }
 
-    public function show(Request $request) {
+    public function info(Request $request) {
+    	$validator = Validator::make($request->all(), [
+            'category_id' => ['required', Rule::In(['1', '2'])],
+            'time' => 'sometimes|boolean'
+        ]);
 
+        if ($validator->fails()) {
+            return json_encode(['failed' => 'post validation failed']);
+        }
+
+        try {
+            $category = Category::find($request->category_id);
+            $path = url('/images/meme/');
+            $info = DB::select(
+                "
+                SELECT m.`id` AS `meme_id`, CONCAT('$path/', '$category->name/', m.`filelink`) AS `filelink`, u.`name` AS `author`, m.`template_id` AS `template_id`
+                FROM `meme` m
+				INNER JOIN `templates` t
+				ON m.`template_id` = t.`id`
+				INNER JOIN `category` c
+				ON t.`category_id` = c.`id`
+				INNER JOIN `users` u
+				ON m.`user_id` = u.`id`
+				WHERE c.`id` = :category_id
+				AND m.`share` = 1
+				AND t.`share` = 1
+				ORDER BY m.`created_at` DESC
+                ", ['category_id' => $request->category_id]
+            );
+            return json_encode(['info' => $info]);
+        } catch(\Throwable $e) {
+            return json_encode(['fail' => $e->getMessage()]);
+        }
     }
 }

@@ -61,4 +61,5 @@ Route::prefix('txt')->group(function () {
 */
 Route::prefix('meme')->group(function () {
 	Route::post('/store', 'API\ImageController@store')->name('api_meme_store');
+	Route::post('/info', 'API\ImageController@info');
 });
