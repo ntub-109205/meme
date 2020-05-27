@@ -120,14 +120,14 @@ class TemplateController extends Controller
                 // delete temp data 
             $deletedTemp = Temp::where('user_id', Auth::guard('api')->user()->id)->delete();
             DB::commit();
+             return json_encode(['success' => 'your posts has been successfully saved!', 
+                                 'template_id' => $template->id]);
         } catch(\Throwable $e) {
             DB::rollback();
             // delete temp data 
             $deletedTemp = Temp::where('user_id', Auth::guard('api')->user()->id)->delete();
             return json_encode(['failed' => $e->getMessage()]);
         }
-
-        return json_encode(['success' => 'your posts has been successfully saved!']);
     }
 
     public function savedStatus(Request $request) {
