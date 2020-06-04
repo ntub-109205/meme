@@ -195,12 +195,6 @@ class TemplateController extends Controller
     }
 
     public function meme(Request $request) {
-        /*$user = Meme::find(1)->thumb_users();
-        print_r($user->count());*/
-
-        /*$user = Auth::guard('api')->user()->thumb_meme();
-        print_r($user->count());*/
-
         $validator = Validator::make($request->all(), [
             'template_id' => 'required|numeric',
         ]);
@@ -215,19 +209,22 @@ class TemplateController extends Controller
             $path = url('/images/meme/');
             $meme = DB::select(
                 "
-                SELECT m.`id`, CONCAT('$path/', '$category->name/', m.`filelink`) AS `filelink`
+                SELECT m.`id`, CONCAT('$path/', '$category->name/', m.`filelink`) AS `filelink`, 
+                (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`meme_id` = m.`id`) AS `count`, 
+                (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`user_id` = :user_id AND mu.`meme_id` = m.`id`) AS `saved`
                 FROM `meme` m
                 INNER JOIN `templates` t
                 ON m.`template_id` = t.`id`
                 WHERE m.`template_id` = :template_id
                 AND m.`share` = 1
                 AND t.`share` = 1
-                ", ['template_id' => $request->template_id]
+                ", ['user_id' => Auth::guard('api')->user()->id, 'template_id' => $request->template_id]
             );
             return json_encode(['meme' => $meme]);
         } catch(\Throwable $e) {
             return json_encode(['fail' => $e->getMessage()]);
         }
+        
     }
 
     public function thumb(Request $request) {
