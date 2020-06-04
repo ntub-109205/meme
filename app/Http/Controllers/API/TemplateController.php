@@ -220,11 +220,17 @@ class TemplateController extends Controller
                 AND t.`share` = 1
                 ", ['user_id' => Auth::guard('api')->user()->id, 'template_id' => $request->template_id]
             );
+
+            // add tags
+            foreach ($meme as $key => $value) {
+                $tags = Meme::find($value->id)->tags()->pluck('name');
+                $meme[$key] = Arr::add((array)$meme[$key], 'tags', $tags);
+            }
+            
             return json_encode(['meme' => $meme]);
         } catch(\Throwable $e) {
             return json_encode(['fail' => $e->getMessage()]);
-        }
-        
+        } 
     }
 
     public function thumb(Request $request) {
