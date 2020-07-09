@@ -207,11 +207,12 @@ class TemplateController extends Controller
             $template = Template::find($request->template_id);
             $category = Category::find($template->category_id);
             $path = url('/images/meme/');
+            // count該圖的讚數、thumb使用者有沒有按讚
             $meme = DB::select(
                 "
                 SELECT m.`id`, CONCAT('$path/', '$category->name/', m.`filelink`) AS `filelink`, 
                 (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`meme_id` = m.`id`) AS `count`, 
-                (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`user_id` = :user_id AND mu.`meme_id` = m.`id`) AS `saved`
+                (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`user_id` = :user_id AND mu.`meme_id` = m.`id`) AS `thumb`
                 FROM `meme` m
                 INNER JOIN `templates` t
                 ON m.`template_id` = t.`id`

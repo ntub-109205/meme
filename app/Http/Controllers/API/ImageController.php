@@ -15,6 +15,7 @@ use App\Temp;
 use Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Arr;
 
 class ImageController extends Controller
 {
@@ -102,5 +103,68 @@ class ImageController extends Controller
         } catch(\Throwable $e) {
             return json_encode(['fail' => $e->getMessage()]);
         }
+    }
+
+    public function savedStatus(Request $request) {
+        $validator = Validator::make($request->all(), [
+            'meme_id' => 'required|numeric'
+        ]);
+        
+        if ($validator->fails()) {
+            return json_encode(['failed' => $validator->errors()]);
+        }
+
+        try {
+            if (Meme::find($request->meme_id)->count() != 0) {
+                $saved = json_decode(Auth::guard('api')->user()->saved, true);
+                if (Arr::exists($saved['meme'], $request->meme_id)) {
+                    return json_encode(['saved' => '1']);   
+                }
+                return json_encode(['saved' => '0']);
+            }  
+        } catch(\Throwable $e) {
+            return json_encode(['failed' => $e->getMessage()]);
+        } 
+    }
+
+    public function saved(Request $request) { 
+        $validator = Validator::make($request->all(), [
+            'meme_id' => 'required|numeric',
+        ]);
+        
+        if ($validator->fails()) {
+            return json_encode(['failed' => $validator->errors()]);
+        }
+
+        $user = Auth::guard('api')->user();
+        $saved = json_decode($user->saved, true);
+
+        // 驗證狀態
+        $status = 0;
+        try {
+            if (Meme::find($request->meme_id)->count() != 0) {
+                $saved = json_decode(Auth::guard('api')->user()->saved, true);
+                if (Arr::exists($saved['meme'], $request->meme_id)) {
+                    $status = 1;  
+                }
+                if ($status) {
+                    try {
+                        unset($saved['meme'][$request->meme_id]);
+                        $user->saved = json_encode($saved);
+                        $user->save();
+                        return json_encode(['saved' => '0']);
+                    } catch(\Throwable $e) {
+                        return json_encode(['failed' => $e->getMessage()]);
+                    }
+                } else {
+                    $saved['meme'] = Arr::add($saved['meme'], $request->meme_id, '1');
+                    $user->saved = json_encode($saved);
+                    $user->save();
+                    return json_encode(['saved' => '1']);      
+                }
+            }  
+        } catch(\Throwable $e) {
+            return json_encode(['failed' => $e->getMessage()]);
+        }   
     }
 }

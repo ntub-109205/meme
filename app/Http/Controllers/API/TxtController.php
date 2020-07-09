@@ -27,7 +27,7 @@ class TxtController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return json_encode(['failed' => 'post validation failed']);
+            return json_encode(['failed' => $validator->errors()]);
         }
 
         if ($temp = Temp::where('user_id', Auth::guard('api')->user()->id)->count() == 0) {
@@ -63,7 +63,7 @@ class TxtController extends Controller
 	            // 'tags' => 'required|array'
 	        ]);
 	        if ($validator->fails()) {
-            	return json_encode(['failed' => 'post validation failed']);
+            	return json_encode(['failed' => $validator->errors()]);
         	}
 
         	DB::beginTransaction();
