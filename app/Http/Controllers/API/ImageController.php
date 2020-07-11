@@ -52,7 +52,7 @@ class ImageController extends Controller
             $meme->filelink = $filename;
             $meme->save();
                 // many to many
-            // $meme->tags()->sync($data->tags, false);
+            $meme->tags()->sync($data->tags, false);
             $template = Template::find($data->template_id);
             $category = Category::find($template->category_id);
             $location = public_path('images/meme/'.$category->name.'/'.$filename);

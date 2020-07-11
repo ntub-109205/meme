@@ -60,7 +60,7 @@ class TxtController extends Controller
 			$validator = Validator::make($request->all(), [
 	            'template_id' => 'numeric|required',
 	            'meme_share' => 'required|boolean',
-	            // 'tags' => 'required|array'
+	            'tags' => 'required|array'
 	        ]);
 	        if ($validator->fails()) {
             	return json_encode(['failed' => $validator->errors()]);
@@ -68,7 +68,7 @@ class TxtController extends Controller
 
         	DB::beginTransaction();
         	try {
-        		/*$tag_id = [];
+        		$tag_id = [];
 	            for ($i = 0; $i < count($request->tags); $i++) {
 	                $tag = Tag::select('id')->where('name', $request->tags[$i])->first();
 	                if ($tag == "") {
@@ -77,7 +77,7 @@ class TxtController extends Controller
 	                    $tag->save();
 	                }
 	                array_push($tag_id, $tag->id);
-	            }*/
+	            }
 
 	            $temp = new Temp;
 	            $temp->user_id = Auth::guard('api')->user()->id;
@@ -85,7 +85,7 @@ class TxtController extends Controller
 	        		[
 	            		'template_id' => $request->template_id,
 	            		'meme_share' => $request->meme_share,
-	            		// 'tags' => $tag_id
+	            		'tags' => $tag_id
 	            	]
 	            );
 	            $temp->save();

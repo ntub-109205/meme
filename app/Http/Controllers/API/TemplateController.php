@@ -210,12 +210,14 @@ class TemplateController extends Controller
             // count該圖的讚數、thumb使用者有沒有按讚
             $meme = DB::select(
                 "
-                SELECT m.`id`, CONCAT('$path/', '$category->name/', m.`filelink`) AS `filelink`, 
+                SELECT m.`id`, CONCAT('$path/', '$category->name/', m.`filelink`) AS `filelink`, u.`name` AS `author`, 
                 (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`meme_id` = m.`id`) AS `count`, 
                 (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`user_id` = :user_id AND mu.`meme_id` = m.`id`) AS `thumb`
                 FROM `meme` m
                 INNER JOIN `templates` t
                 ON m.`template_id` = t.`id`
+                INNER JOIN `users` u
+                ON m.`user_id` = u.`id`
                 WHERE m.`template_id` = :template_id
                 AND m.`share` = 1
                 AND t.`share` = 1
