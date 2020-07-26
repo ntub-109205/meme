@@ -37,32 +37,29 @@ class TemplateController extends Controller
             return json_encode(['failed' => $validator->errors()]);
         }
 
-        $category = Category::find($request->category_id);
-        $path = url('/images/templates/');
-        $query = "
-            SELECT t.`id`, CONCAT('$path/', '$category->name/', t.`filelink`) AS `filelink`, t.`name`, u.`name` AS `author`, COUNT(m.`template_id`) AS `count`
-            FROM `templates` t
-            INNER JOIN `users` u
-            ON t.`user_id` = u.`id`
-            LEFT JOIN `meme` m
-            ON t.`id` = m.`template_id`
-            WHERE t.`category_id` = :category_id
-            AND t.`share` = 1
-            GROUP BY t.`id`, `filelink`, t.`name`, u.`name`
-            ";
-
         try {
-            if (!isset($request->time)) {
-                $query .= "ORDER BY COUNT(m.`template_id`) DESC";
-                $template = DB::select(
-                    $query, ['category_id' => $request->category_id]
-                );
-            } else {
+            $category = Category::find($request->category_id);
+            $path = url('/images/templates/');
+            $query = "
+                SELECT t.`id`, CONCAT('$path/', '$category->name/', t.`filelink`) AS `filelink`, t.`name`, u.`name` AS `author`, COUNT(m.`template_id`) AS `count`
+                FROM `templates` t
+                INNER JOIN `users` u
+                ON t.`user_id` = u.`id`
+                LEFT JOIN `meme` m
+                ON t.`id` = m.`template_id`
+                WHERE t.`category_id` = :category_id
+                AND t.`share` = 1
+                GROUP BY t.`id`, `filelink`, t.`name`, u.`name`
+                ";
+            if (isset($request->time)) {
                 $query .= "ORDER BY t.`created_at` DESC";
-                $template = DB::select(
-                    $query, ['category_id' => $request->category_id]
-                );   
+            } else {
+                $query .= "ORDER BY COUNT(m.`template_id`) DESC"; 
             }
+
+            $template = DB::select(
+                $query, ['category_id' => $request->category_id]
+            ); 
         } catch(\Throwable $e) {
             return json_encode(['fail' => $e->getMessage()]);
         }

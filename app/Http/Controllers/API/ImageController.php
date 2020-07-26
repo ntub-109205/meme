@@ -83,22 +83,27 @@ class ImageController extends Controller
         try {
             $category = Category::find($request->category_id);
             $path = url('/images/meme/');
-            $info = DB::select(
-                "
-                SELECT m.`id` AS `meme_id`, CONCAT('$path/', '$category->name/', m.`filelink`) AS `filelink`, u.`name` AS `author`, m.`template_id`
+            $query = "
+                SELECT m.`id` AS `meme_id`, CONCAT('$path/', '$category->name/', m.`filelink`) AS `filelink`, u.`name` AS `author`, m.`template_id`,
+                (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`meme_id` = m.`id`) AS `count`, 
+                (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`user_id` = :user_id AND mu.`meme_id` = m.`id`) AS `thumb`
                 FROM `meme` m
-				INNER JOIN `templates` t
-				ON m.`template_id` = t.`id`
-				INNER JOIN `category` c
-				ON t.`category_id` = c.`id`
-				INNER JOIN `users` u
-				ON m.`user_id` = u.`id`
-				WHERE c.`id` = :category_id
-				AND m.`share` = 1
-				AND t.`share` = 1
-				ORDER BY m.`created_at` DESC
-                ", ['category_id' => $request->category_id]
-            );
+                INNER JOIN `templates` t
+                ON m.`template_id` = t.`id`
+                INNER JOIN `category` c
+                ON t.`category_id` = c.`id`
+                INNER JOIN `users` u
+                ON m.`user_id` = u.`id`
+                WHERE c.`id` = :category_id
+                AND m.`share` = 1
+                AND t.`share` = 1
+                ";
+            if (isset($request->time)) {
+                $query .= "ORDER BY m.`created_at` DESC";
+            } else {
+                $query .= "ORDER BY `count` DESC";
+            }
+            $info = DB::select($query, ['user_id' => Auth::guard('api')->user()->id, 'category_id' => $request->category_id]);
 
             // add tags
             foreach ($info as $key => $value) {
@@ -174,7 +179,7 @@ class ImageController extends Controller
             return json_encode(['failed' => $e->getMessage()]);
         }   
     }
-    
+
     public function thumb(Request $request) {
         $validator = Validator::make($request->all(), [
             'meme_id' => 'required|numeric',
