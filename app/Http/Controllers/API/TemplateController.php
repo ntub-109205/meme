@@ -34,52 +34,39 @@ class TemplateController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return json_encode(['failed' => 'post validation failed']);
+            return json_encode(['failed' => $validator->errors()]);
         }
 
-        if (!isset($request->time)) {
-            try {
-                $category = Category::find($request->category_id);
-                $path = url('/images/templates/');
+        $category = Category::find($request->category_id);
+        $path = url('/images/templates/');
+        $query = "
+            SELECT t.`id`, CONCAT('$path/', '$category->name/', t.`filelink`) AS `filelink`, t.`name`, u.`name` AS `author`, COUNT(m.`template_id`) AS `count`
+            FROM `templates` t
+            INNER JOIN `users` u
+            ON t.`user_id` = u.`id`
+            LEFT JOIN `meme` m
+            ON t.`id` = m.`template_id`
+            WHERE t.`category_id` = :category_id
+            AND t.`share` = 1
+            GROUP BY t.`id`, `filelink`, t.`name`, u.`name`
+            ";
+
+        try {
+            if (!isset($request->time)) {
+                $query .= "ORDER BY COUNT(m.`template_id`) DESC";
                 $template = DB::select(
-                    "
-                    SELECT t.`id`, CONCAT('$path/', '$category->name/', t.`filelink`) AS `filelink`, t.`name`, u.`name` AS `author`, COUNT(m.`template_id`) AS `count`
-                    FROM `templates` t
-                    INNER JOIN `users` u
-                    ON t.`user_id` = u.`id`
-                    LEFT JOIN `meme` m
-                    ON t.`id` = m.`template_id`
-                    WHERE t.`category_id` = :category_id
-                    AND t.`share` = 1
-                    GROUP BY t.`id`, `filelink`, t.`name`, u.`name`
-                    ORDER BY COUNT(m.`template_id`) DESC
-                    ", ['category_id' => $request->category_id]
+                    $query, ['category_id' => $request->category_id]
                 );
-            } catch(\Throwable $e) {
-                return json_encode(['fail' => $e->getMessage()]);
-            }
-        } else {
-            try {
-                $category = Category::find($request->category_id);
-                $path = url('/images/templates/');
+            } else {
+                $query .= "ORDER BY t.`created_at` DESC";
                 $template = DB::select(
-                    "
-                    SELECT t.`id`, CONCAT('$path/', '$category->name/', t.`filelink`) AS `filelink`, t.`name`, u.`name` AS `author`, COUNT(m.`template_id`) AS `count`, t.`created_at`
-                    FROM `templates` t
-                    INNER JOIN `users` u
-                    ON t.`user_id` = u.`id`
-                    LEFT JOIN `meme` m
-                    ON t.`id` = m.`template_id`
-                    WHERE t.`category_id` = :category_id
-                    AND t.`share` = 1
-                    GROUP BY t.`id`, `filelink`, t.`name`, u.`name`, t.`created_at`
-                    ORDER BY t.`created_at` DESC
-                    ", ['category_id' => $request->category_id]
-                );
-            } catch(\Throwable $e) {
-                return json_encode(['fail' => $e->getMessage()]);
+                    $query, ['category_id' => $request->category_id]
+                );   
             }
+        } catch(\Throwable $e) {
+            return json_encode(['fail' => $e->getMessage()]);
         }
+
         return json_encode(['templates' => $template]);
     }
 
@@ -91,7 +78,7 @@ class TemplateController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return json_encode(['failed' => 'post validation failed']);
+            return json_encode(['failed' => $validator->errors()]);
         }
 
         if ($temp = Temp::where('user_id', Auth::guard('api')->user()->id)->count() == 0) {
@@ -136,7 +123,7 @@ class TemplateController extends Controller
         ]);
         
         if ($validator->fails()) {
-            return json_encode(['failed' => 'post validation failed']);
+            return json_encode(['failed' => $validator->errors()]);
         }
 
         try {
@@ -158,7 +145,7 @@ class TemplateController extends Controller
         ]);
         
         if ($validator->fails()) {
-            return json_encode(['failed' => 'post validation failed']);
+            return json_encode(['failed' => $validator->errors()]);
         }
 
         $user = Auth::guard('api')->user();
@@ -200,7 +187,7 @@ class TemplateController extends Controller
         ]);
         
         if ($validator->fails()) {
-            return json_encode(['failed' => 'post validation failed']);
+            return json_encode(['failed' => $validator->errors()]);
         }
 
         try {
@@ -235,25 +222,4 @@ class TemplateController extends Controller
             return json_encode(['fail' => $e->getMessage()]);
         } 
     }
-
-    public function thumb(Request $request) {
-        $validator = Validator::make($request->all(), [
-            'meme_id' => 'required|numeric',
-        ]);
-        
-        if ($validator->fails()) {
-            return json_encode(['failed' => 'post validation failed']);
-        }
-
-        /*try {
-            Auth::guard('api')->user()->thumb_meme()->sync($request->meme_id, false);
-            return json_encode(['success' => 'your posts has been successfully saved!']);
-        } catch(\Throwable $e) {
-            return json_encode(['failed' => $e->getMessage()]);
-        }*/
-        $a = Auth::guard('api')->user()->thumb_meme()->get();
-        var_dump($a);
-        //return json_encode(['success' => 'your posts has been successfully saved!']);
-    }
-
 }

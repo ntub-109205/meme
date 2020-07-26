@@ -19,7 +19,6 @@ class CreateMemeTable extends Migration
             $table->unsignedBigInteger('template_id');
             $table->unsignedBigInteger('category_id');
             $table->string('filelink');
-            $table->integer('thumb_up')->default(0);
             $table->boolean('share')->default(0);
             $table->timestamps();
         });

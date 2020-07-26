@@ -85,7 +85,7 @@ class ImageController extends Controller
             $path = url('/images/meme/');
             $info = DB::select(
                 "
-                SELECT m.`id` AS `meme_id`, CONCAT('$path/', '$category->name/', m.`filelink`) AS `filelink`, u.`name` AS `author`, m.`template_id` AS `template_id`
+                SELECT m.`id` AS `meme_id`, CONCAT('$path/', '$category->name/', m.`filelink`) AS `filelink`, u.`name` AS `author`, m.`template_id`
                 FROM `meme` m
 				INNER JOIN `templates` t
 				ON m.`template_id` = t.`id`
@@ -99,6 +99,13 @@ class ImageController extends Controller
 				ORDER BY m.`created_at` DESC
                 ", ['category_id' => $request->category_id]
             );
+
+            // add tags
+            foreach ($info as $key => $value) {
+                $tags = Meme::find($value->meme_id)->tags()->pluck('name');
+                $info[$key] = Arr::add((array)$info[$key], 'tags', $tags);
+            }
+
             return json_encode(['info' => $info]);
         } catch(\Throwable $e) {
             return json_encode(['fail' => $e->getMessage()]);
@@ -166,5 +173,29 @@ class ImageController extends Controller
         } catch(\Throwable $e) {
             return json_encode(['failed' => $e->getMessage()]);
         }   
+    }
+    
+    public function thumb(Request $request) {
+        $validator = Validator::make($request->all(), [
+            'meme_id' => 'required|numeric',
+        ]);
+        
+        if ($validator->fails()) {
+            return json_encode(['failed' => $validator->errors()]);
+        }
+
+        try {
+            $thumb = Auth::guard('api')->user()->thumb_meme();
+            if ($thumb->where('meme_id', $request->meme_id)->count()) {
+                $thumb->detach($request->meme_id);
+                return json_encode(['status' => '0']);
+            } else {
+                $thumb->sync($request->meme_id, false);
+                return json_encode(['status' => '1']);
+            }
+            
+        } catch(\Throwable $e) {
+            return json_encode(['failed' => $e->getMessage()]);
+        }
     }
 }

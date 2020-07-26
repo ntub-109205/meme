@@ -46,7 +46,6 @@ Route::prefix('template')->group(function () {
 	Route::post('/savedStatus', 'API\TemplateController@savedStatus');
 	Route::post('/saved', 'API\TemplateController@saved');
 	Route::post('/meme', 'API\TemplateController@meme');
-	Route::post('/thumb', 'API\TemplateController@thumb');
 });
 
 Route::prefix('txt')->group(function () {
@@ -64,4 +63,5 @@ Route::prefix('meme')->group(function () {
 	Route::post('/info', 'API\ImageController@info');
 	Route::post('/savedStatus', 'API\ImageController@savedStatus');
 	Route::post('/saved', 'API\ImageController@saved');
+	Route::post('/thumb', 'API\ImageController@thumb');
 });
