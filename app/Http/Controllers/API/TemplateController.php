@@ -181,6 +181,7 @@ class TemplateController extends Controller
     public function meme(Request $request) {
         $validator = Validator::make($request->all(), [
             'template_id' => 'required|numeric',
+            'meme_id' => 'sometimes|numeric' //搜尋不含此meme_id
         ]);
         
         if ($validator->fails()) {
@@ -191,9 +192,9 @@ class TemplateController extends Controller
             $template = Template::find($request->template_id);
             $category = Category::find($template->category_id);
             $path = url('/images/meme/');
+
             // count該圖的讚數、thumb使用者有沒有按讚
-            $meme = DB::select(
-                "
+            $query = "
                 SELECT m.`id`, CONCAT('$path/', '$category->name/', m.`filelink`) AS `filelink`, u.`name` AS `author`, 
                 (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`meme_id` = m.`id`) AS `count`, 
                 (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`user_id` = :user_id AND mu.`meme_id` = m.`id`) AS `thumb`
@@ -205,8 +206,18 @@ class TemplateController extends Controller
                 WHERE m.`template_id` = :template_id
                 AND m.`share` = 1
                 AND t.`share` = 1
-                ", ['user_id' => Auth::guard('api')->user()->id, 'template_id' => $request->template_id]
-            );
+                ";
+            if (isset($request->meme_id)) {
+                $query .= "AND m.`id` != :meme_id ORDER BY `count` DESC";
+                $meme = DB::select(
+                    $query, ['user_id' => Auth::guard('api')->user()->id, 'template_id' => $request->template_id, 'meme_id' => $request->meme_id]
+                );
+            } else {
+                $query .= "ORDER BY `count` DESC";
+                $meme = DB::select(
+                    $query, ['user_id' => Auth::guard('api')->user()->id, 'template_id' => $request->template_id]
+                );
+            }
 
             // add tags
             foreach ($meme as $key => $value) {

@@ -28,9 +28,7 @@ class ImageController extends Controller
     {    
         if ($temp = Temp::where('user_id', Auth::guard('api')->user()->id)->count() == 0) {
             return json_encode(['failed' => 'there has no template data']);
-        }
-        $temp = Temp::select('data')->where('user_id', Auth::guard('api')->user()->id)->first();
-        $data = json_decode($temp->data);
+        }        
         // validate data
         $validator = Validator::make($request->all(), [
             'meme_image' => 'required|image',
@@ -39,6 +37,8 @@ class ImageController extends Controller
             return json_encode(['failed' => 'post validation failed']);
         }
 
+        $temp = Temp::select('data')->where('user_id', Auth::guard('api')->user()->id)->first();
+        $data = json_decode($temp->data);
         DB::beginTransaction();
         try {
             // post meme data
@@ -52,7 +52,10 @@ class ImageController extends Controller
             $meme->filelink = $filename;
             $meme->save();
                 // many to many
-            $meme->tags()->sync($data->tags, false);
+            if (isset($data->tags)) {
+                $meme->tags()->sync($data->tags, false);
+            }
+
             $template = Template::find($data->template_id);
             $category = Category::find($template->category_id);
             $location = public_path('images/meme/'.$category->name.'/'.$filename);
@@ -193,10 +196,10 @@ class ImageController extends Controller
             $thumb = Auth::guard('api')->user()->thumb_meme();
             if ($thumb->where('meme_id', $request->meme_id)->count()) {
                 $thumb->detach($request->meme_id);
-                return json_encode(['status' => '0']);
+                return json_encode(['thumb' => '0']);
             } else {
                 $thumb->sync($request->meme_id, false);
-                return json_encode(['status' => '1']);
+                return json_encode(['thumb' => '1']);
             }
             
         } catch(\Throwable $e) {

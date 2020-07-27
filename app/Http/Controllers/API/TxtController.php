@@ -60,7 +60,7 @@ class TxtController extends Controller
 			$validator = Validator::make($request->all(), [
 	            'template_id' => 'numeric|required',
 	            'meme_share' => 'required|boolean',
-	            'tags' => 'required|array'
+	            'tags' => 'sometimes|string'
 	        ]);
 	        if ($validator->fails()) {
             	return json_encode(['failed' => $validator->errors()]);
@@ -68,27 +68,36 @@ class TxtController extends Controller
 
         	DB::beginTransaction();
         	try {
-        		$tag_id = [];
-	            for ($i = 0; $i < count($request->tags); $i++) {
-	                $tag = Tag::select('id')->where('name', $request->tags[$i])->first();
-	                if ($tag == "") {
-	                    $tag = new Tag;
-	                    $tag->name = $request->tags[$i];
-	                    $tag->save();
-	                }
-	                array_push($tag_id, $tag->id);
-	            }
-
-	            $temp = new Temp;
+        		$temp = new Temp;
 	            $temp->user_id = Auth::guard('api')->user()->id;
-	            $temp->data = json_encode(
-	        		[
-	            		'template_id' => $request->template_id,
-	            		'meme_share' => $request->meme_share,
-	            		'tags' => $tag_id
-	            	]
-	            );
-	            $temp->save();
+        		if (isset($request->tags)) {
+        			$tag_id = [];
+        			$tags = array_filter(explode("#", $request->tags));
+        			foreach ($tags as $value) {
+        				$tag = Tag::select('id')->where('name', $value)->first();
+        				if ($tag == "") {
+		                    $tag = new Tag;
+		                    $tag->name = $value;
+		                    $tag->save();
+		                }
+		                array_push($tag_id, $tag->id);
+        			}
+        			$temp->data = json_encode(
+		        		[
+		            		'template_id' => $request->template_id,
+		            		'meme_share' => $request->meme_share,
+		            		'tags' => $tag_id
+		            	]
+		            );
+        		} else {
+        			$temp->data = json_encode(
+		        		[
+		            		'template_id' => $request->template_id,
+		            		'meme_share' => $request->meme_share
+		            	]
+		            );
+        		}
+        		$temp->save();
         		DB::commit();
         		return json_encode(['success' => 'your posts has been successfully saved!']);
         	} catch (\Throwable $e) {
@@ -100,5 +109,13 @@ class TxtController extends Controller
         	$deletedTemp = Temp::where('user_id', Auth::guard('api')->user()->id)->delete();
 	    	return json_encode(['failed' => 'this user still has a temperate  data, system will automatically remove temperate data']);
 	    }
+	}
+
+	public function test(Request $request) {
+		$tags = array_filter(explode("#", $request->tags));
+		foreach ($tags as $value) {
+			print($value);
+		}
+		
 	}
 }
