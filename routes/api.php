@@ -40,7 +40,6 @@ Route::group(['middleware' => 'auth:api'], function(){
 Route::prefix('template')->group(function () {
 	Route::post('/store', 'API\TemplateController@store')->name('api_template_store');
 	Route::post('/imageStore', 'API\TemplateController@imageStore');
-
 	Route::post('/show', 'API\TemplateController@show')->name('api_template_show');
 	Route::post('/test/store', 'API\TemplateController@testStore');
 	Route::post('/savedStatus', 'API\TemplateController@savedStatus');
@@ -65,4 +64,14 @@ Route::prefix('meme')->group(function () {
 	Route::post('/savedStatus', 'API\ImageController@savedStatus');
 	Route::post('/saved', 'API\ImageController@saved');
 	Route::post('/thumb', 'API\ImageController@thumb');
+});
+
+/*
+|------------------------------------
+| profile api
+|------------------------------------
+*/
+Route::prefix('profile')->group(function () {
+	Route::get('/', 'API\ProfileController@user');
+	Route::get('/showSaved', 'API\ProfileController@showSaved');
 });

@@ -19,7 +19,7 @@ class TxtController extends Controller
     }
 
 	public function templateStore(Request $request) {
-		 // validate data
+		// validate data
         $validator = Validator::make($request->all(), [
             'category_id' => ['required', Rule::In(['1', '2'])],
             'name' => 'required|max:255',

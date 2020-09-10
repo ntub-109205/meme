@@ -166,7 +166,7 @@ class TemplateController extends Controller
                         return json_encode(['failed' => $e->getMessage()]);
                     }
                 } else {
-                    $saved['templates'] = Arr::add($saved['templates'], $request->template_id, '1');
+                    $saved['templates'] = Arr::add($saved['templates'], $request->template_id, date("Y-m-d H:i:s"));
                     $user->saved = json_encode($saved);
                     $user->save();
                     return json_encode(['saved' => '1']);      

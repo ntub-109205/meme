@@ -20,4 +20,5 @@ Route::get('/', function () {
 Route::get('/phpinfo', function () {
     return view('phpinfo');
 });
-// Auth::routes();
+
+Route::get('/showSaved', 'API\ProfileController@showSaved');
