@@ -21,4 +21,5 @@ Route::get('/phpinfo', function () {
     return view('phpinfo');
 });
 
-Route::get('/showSaved', 'API\ProfileController@showSaved');
+Route::get('/show/saved', 'API\ProfileController@saved');
+Route::get('/show/work', 'API\ProfileController@work');

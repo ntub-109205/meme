@@ -73,5 +73,6 @@ Route::prefix('meme')->group(function () {
 */
 Route::prefix('profile')->group(function () {
 	Route::get('/', 'API\ProfileController@user');
-	Route::get('/showSaved', 'API\ProfileController@showSaved');
+	Route::get('/show/saved', 'API\ProfileController@saved');
+	Route::get('/show/work', 'API\ProfileController@work');
 });
