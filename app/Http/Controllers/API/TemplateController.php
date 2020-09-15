@@ -25,13 +25,12 @@ class TemplateController extends Controller
         $this->middleware('auth:api');
     }
 
-    public function show(Request $request, $category_id, $user = 0, $time = 0)
+    public function show(Request $request, $category_id)
     {
         $request->merge([
             'category_id' => $category_id,
-            'time' => $time,
-            'user' => $user,
         ]);
+
         // validate data
         $validator = Validator::make($request->all(), [
             'category_id' => ['required', Rule::In(['1', '2'])],
@@ -44,7 +43,7 @@ class TemplateController extends Controller
         }
 
         try {
-            $param = ['category_id' => $category_id];
+            $param = ['category_id' => $request->category_id];
             $category = Category::find($request->category_id);
             $path = url('/images/templates/');
             $query = "
@@ -56,14 +55,14 @@ class TemplateController extends Controller
                 ON t.`id` = m.`template_id`
                 WHERE t.`category_id` = :category_id
                 ";
-            if ($user) {   
+            if ($request->user) {   
                 $query .= "AND u.`id` = :user ";
                 $param['user'] = Auth::guard('api')->user()->id;
             } else {
                 $query .= "AND t.`share` = 1 ";
             } 
             $query .= "GROUP BY t.`id`, `filelink`, t.`name`, u.`name` ";
-            $time ? $query .= "ORDER BY t.`created_at` DESC" : $query .= "ORDER BY COUNT(m.`template_id`) DESC";
+            $request->time ? $query .= "ORDER BY t.`created_at` DESC" : $query .= "ORDER BY COUNT(m.`template_id`) DESC";
             $template = DB::select($query, $param); 
         } catch(\Throwable $e) {
             return json_encode(['fail' => $e->getMessage()]);
@@ -118,19 +117,11 @@ class TemplateController extends Controller
         }
     }
 
-    public function savedStatus(Request $request) {
-        $validator = Validator::make($request->all(), [
-            'template_id' => 'required|numeric'
-        ]);
-        
-        if ($validator->fails()) {
-            return json_encode(['failed' => $validator->errors()]);
-        }
-
+    public function savedStatus($template_id) {
         try {
-            if (Template::find($request->template_id)->count() != 0) {
+            if (Template::find($template_id)->count() != 0) {
                 $saved = json_decode(Auth::guard('api')->user()->saved, true);
-                if (Arr::exists($saved['templates'], $request->template_id)) {
+                if (Arr::exists($saved['templates'], $template_id)) {
                     return json_encode(['saved' => '1']);   
                 }
                 return json_encode(['saved' => '0']);
