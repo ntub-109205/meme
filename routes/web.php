@@ -23,3 +23,4 @@ Route::get('/phpinfo', function () {
 
 Route::get('/show/saved', 'API\ProfileController@saved');
 Route::get('/show/work', 'API\ProfileController@work');
+Route::get('/template/show/{category_id}/{time?}/{user?}', 'API\TemplateController@show')->name('api_template_show');

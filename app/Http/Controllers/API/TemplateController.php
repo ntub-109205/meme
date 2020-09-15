@@ -25,12 +25,18 @@ class TemplateController extends Controller
         $this->middleware('auth:api');
     }
 
-    public function show(Request $request)
+    public function show(Request $request, $category_id, $user = 0, $time = 0)
     {
+        $request->merge([
+            'category_id' => $category_id,
+            'time' => $time,
+            'user' => $user,
+        ]);
         // validate data
         $validator = Validator::make($request->all(), [
             'category_id' => ['required', Rule::In(['1', '2'])],
-            'time' => 'sometimes|boolean'
+            'time' => 'sometimes|boolean',
+            'user' => 'sometimes|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -38,32 +44,30 @@ class TemplateController extends Controller
         }
 
         try {
+            $param = ['category_id' => $category_id];
             $category = Category::find($request->category_id);
             $path = url('/images/templates/');
             $query = "
-                SELECT t.`id`, CONCAT('$path/', '$category->name/', t.`filelink`) AS `filelink`, t.`name`, u.`name` AS `author`, COUNT(m.`template_id`) AS `count`
+                SELECT t.`id`, CONCAT('$path/', '$category->name/', t.`filelink`) AS `filelink`, t.`name`, u.`name` AS `author`, COUNT(m.`template_id`) AS `count`, t.`created_at`
                 FROM `templates` t
                 INNER JOIN `users` u
                 ON t.`user_id` = u.`id`
                 LEFT JOIN `meme` m
                 ON t.`id` = m.`template_id`
                 WHERE t.`category_id` = :category_id
-                AND t.`share` = 1
-                GROUP BY t.`id`, `filelink`, t.`name`, u.`name`
                 ";
-            if (isset($request->time)) {
-                $query .= "ORDER BY t.`created_at` DESC";
+            if ($user) {   
+                $query .= "AND u.`id` = :user ";
+                $param['user'] = Auth::guard('api')->user()->id;
             } else {
-                $query .= "ORDER BY COUNT(m.`template_id`) DESC"; 
-            }
-
-            $template = DB::select(
-                $query, ['category_id' => $request->category_id]
-            ); 
+                $query .= "AND t.`share` = 1 ";
+            } 
+            $query .= "GROUP BY t.`id`, `filelink`, t.`name`, u.`name` ";
+            $time ? $query .= "ORDER BY t.`created_at` DESC" : $query .= "ORDER BY COUNT(m.`template_id`) DESC";
+            $template = DB::select($query, $param); 
         } catch(\Throwable $e) {
             return json_encode(['fail' => $e->getMessage()]);
         }
-
         return json_encode(['templates' => $template]);
     }
 
