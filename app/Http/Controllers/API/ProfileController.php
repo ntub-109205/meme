@@ -81,7 +81,7 @@ class ProfileController extends Controller
     	return json_encode($saved);
     }
 
-    public function work() 
+    public function myWork() 
     {
         $user_id = Auth::guard('api')->user()->id;
 

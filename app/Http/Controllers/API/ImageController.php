@@ -73,7 +73,12 @@ class ImageController extends Controller
         }
     }
 
-    public function info(Request $request) {
+    public function show(Request $request, $category_id)
+    {
+        $request->merge([
+            'category_id' => $category_id,
+        ]);
+
     	$validator = Validator::make($request->all(), [
             'category_id' => ['required', Rule::In(['1', '2'])],
             'time' => 'sometimes|boolean'
@@ -89,7 +94,7 @@ class ImageController extends Controller
             $query = "
                 SELECT m.`id` AS `meme_id`, CONCAT('$path/', '$category->name/', m.`filelink`) AS `filelink`, u.`name` AS `author`, m.`template_id`,
                 (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`meme_id` = m.`id`) AS `count`, 
-                (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`user_id` = :user_id AND mu.`meme_id` = m.`id`) AS `thumb`
+                (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`user_id` = :user_id AND mu.`meme_id` = m.`id`) AS `thumb`, m.`created_at`
                 FROM `meme` m
                 INNER JOIN `templates` t
                 ON m.`template_id` = t.`id`
@@ -101,11 +106,7 @@ class ImageController extends Controller
                 AND m.`share` = 1
                 AND t.`share` = 1
                 ";
-            if (isset($request->time)) {
-                $query .= "ORDER BY m.`created_at` DESC";
-            } else {
-                $query .= "ORDER BY `count` DESC";
-            }
+            $request->time ? $query .= "ORDER BY m.`created_at` DESC" : $query .= "ORDER BY `count` DESC";
             $info = DB::select($query, ['user_id' => Auth::guard('api')->user()->id, 'category_id' => $request->category_id]);
 
             // add tags
@@ -114,25 +115,18 @@ class ImageController extends Controller
                 $info[$key] = Arr::add((array)$info[$key], 'tags', $tags);
             }
 
-            return json_encode(['info' => $info]);
+            return json_encode(['meme' => $info]);
         } catch(\Throwable $e) {
             return json_encode(['fail' => $e->getMessage()]);
         }
     }
 
-    public function savedStatus(Request $request) {
-        $validator = Validator::make($request->all(), [
-            'meme_id' => 'required|numeric'
-        ]);
-        
-        if ($validator->fails()) {
-            return json_encode(['failed' => $validator->errors()]);
-        }
-
+    public function savedStatus($id)
+    {
         try {
-            if (Meme::find($request->meme_id)->count() != 0) {
+            if (Meme::find($id)->count() != 0) {
                 $saved = json_decode(Auth::guard('api')->user()->saved, true);
-                if (Arr::exists($saved['meme'], $request->meme_id)) {
+                if (Arr::exists($saved['meme'], $id)) {
                     return json_encode(['saved' => '1']);   
                 }
                 return json_encode(['saved' => '0']);
@@ -142,7 +136,8 @@ class ImageController extends Controller
         } 
     }
 
-    public function saved(Request $request) { 
+    public function saved(Request $request)
+    { 
         $validator = Validator::make($request->all(), [
             'meme_id' => 'required|numeric',
         ]);
@@ -183,7 +178,8 @@ class ImageController extends Controller
         }   
     }
 
-    public function thumb(Request $request) {
+    public function thumb(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'meme_id' => 'required|numeric',
         ]);

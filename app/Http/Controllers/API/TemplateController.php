@@ -117,7 +117,8 @@ class TemplateController extends Controller
         }
     }
 
-    public function savedStatus($template_id) {
+    public function savedStatus($template_id)
+    {
         try {
             if (Template::find($template_id)->count() != 0) {
                 $saved = json_decode(Auth::guard('api')->user()->saved, true);
@@ -131,7 +132,8 @@ class TemplateController extends Controller
         } 
     }
 
-    public function saved(Request $request) { 
+    public function saved(Request $request)
+    { 
         $validator = Validator::make($request->all(), [
             'template_id' => 'required|numeric',
         ]);
@@ -173,10 +175,10 @@ class TemplateController extends Controller
         
     }
 
-    public function meme(Request $request) {
+    public function meme(Request $request, $template_id)
+    {
         $validator = Validator::make($request->all(), [
-            'template_id' => 'required|numeric',
-            'meme_id' => 'sometimes|numeric' //搜尋不含此meme_id
+            'exclude' => 'sometimes|numeric' //搜尋不含此meme_id
         ]);
         
         if ($validator->fails()) {
@@ -202,10 +204,10 @@ class TemplateController extends Controller
                 AND m.`share` = 1
                 AND t.`share` = 1
                 ";
-            if (isset($request->meme_id)) {
+            if (isset($request->exclude)) {
                 $query .= "AND m.`id` != :meme_id ORDER BY `count` DESC";
                 $meme = DB::select(
-                    $query, ['user_id' => Auth::guard('api')->user()->id, 'template_id' => $request->template_id, 'meme_id' => $request->meme_id]
+                    $query, ['user_id' => Auth::guard('api')->user()->id, 'template_id' => $request->template_id, 'meme_id' => $request->exclude]
                 );
             } else {
                 $query .= "ORDER BY `count` DESC";

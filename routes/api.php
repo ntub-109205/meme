@@ -38,13 +38,11 @@ Route::group(['middleware' => 'auth:api'], function(){
 |------------------------------------
 */
 Route::prefix('template')->group(function () {
-	Route::post('/store', 'API\TemplateController@store')->name('api_template_store');
-	Route::post('/imageStore', 'API\TemplateController@imageStore');
-	Route::get('/show/{category_id}/{time?}/{user?}', 'API\TemplateController@show')->name('api_template_show');
-	Route::post('/test/store', 'API\TemplateController@testStore');
-	Route::post('/savedStatus', 'API\TemplateController@savedStatus');
+	Route::post('/store', 'API\TemplateController@store');
+	Route::get('/show/{category_id}', 'API\TemplateController@show');
+	Route::get('/saved/{template_id}', 'API\TemplateController@savedStatus');
 	Route::post('/saved', 'API\TemplateController@saved');
-	Route::post('/meme', 'API\TemplateController@meme');
+	Route::get('/meme/{template_id}', 'API\TemplateController@meme');
 });
 
 Route::prefix('txt')->group(function () {
@@ -59,9 +57,9 @@ Route::prefix('txt')->group(function () {
 |------------------------------------
 */
 Route::prefix('meme')->group(function () {
-	Route::post('/store', 'API\ImageController@store')->name('api_meme_store');
-	Route::post('/info', 'API\ImageController@info');
-	Route::post('/savedStatus', 'API\ImageController@savedStatus');
+	Route::post('/store', 'API\ImageController@store');
+	Route::get('/show/{category_id}', 'API\ImageController@show');
+	Route::get('/saved/{meme_id}', 'API\ImageController@savedStatus');
 	Route::post('/saved', 'API\ImageController@saved');
 	Route::post('/thumb', 'API\ImageController@thumb');
 });
@@ -74,5 +72,5 @@ Route::prefix('meme')->group(function () {
 Route::prefix('profile')->group(function () {
 	Route::get('/', 'API\ProfileController@user');
 	Route::get('/show/saved', 'API\ProfileController@saved');
-	Route::get('/show/work', 'API\ProfileController@work');
+	Route::get('/show/myWork', 'API\ProfileController@myWork');
 });

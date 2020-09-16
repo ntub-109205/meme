@@ -10,7 +10,8 @@ use Validator;
 
 class UserController extends Controller
 {
-    public function __construct() {
+    public function __construct()
+    {
         $this->middleware('auth:api')->except('login');
     }
 
@@ -19,7 +20,8 @@ class UserController extends Controller
      * 
      * @return \Illuminate\Http\Response 
      */ 
-    public function login(Request $request){
+    public function login(Request $request)
+    {
     	$validator = Validator::make($request->all(), [ 
             'email' => 'required|email', 
             'password' => 'required', 
@@ -37,6 +39,7 @@ class UserController extends Controller
             return response()->json(['error'=>'Unauthorised'], 401); 
         } 
     }
+    
 	/** 
      * Register api 
      * 

@@ -18,7 +18,8 @@ class TxtController extends Controller
         $this->middleware('auth:api');
     }
 
-	public function templateStore(Request $request) {
+	public function templateStore(Request $request)
+	{
 		// validate data
         $validator = Validator::make($request->all(), [
             'category_id' => ['required', Rule::In(['1', '2'])],
@@ -55,7 +56,8 @@ class TxtController extends Controller
         }
 	}
 
-	public function memeStore(Request $request) {
+	public function memeStore(Request $request)
+	{
 		if ($temp = Temp::where('user_id', Auth::guard('api')->user()->id)->count() == 0) {
 			$validator = Validator::make($request->all(), [
 	            'template_id' => 'numeric|required',
@@ -111,7 +113,8 @@ class TxtController extends Controller
 	    }
 	}
 
-	public function test(Request $request) {
+	public function test(Request $request)
+	{
 		$tags = array_filter(explode("#", $request->tags));
 		foreach ($tags as $value) {
 			print($value);
