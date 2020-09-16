@@ -36,7 +36,7 @@ class ProfileController extends Controller
 
     		if ($name == 'meme') {
     			$query = "
-	                SELECT m.`filelink`, c.`name`
+	                SELECT m.`filelink`, c.`name`, m.id
 					FROM `meme` m
 					INNER JOIN `templates` t
 					ON m.`template_id` = t.`id`
@@ -46,7 +46,7 @@ class ProfileController extends Controller
 	            	";
     		} else if ($name == 'templates') {
     			$query = "
-	                SELECT t.`filelink`, c.`name`
+	                SELECT t.`filelink`, c.`name`, t.id
 					FROM `templates` t
 					INNER JOIN `category` c
 					ON t.`category_id` = c.`id`
@@ -58,17 +58,22 @@ class ProfileController extends Controller
     			foreach ($value as $key => $time) {
 		            $info = DB::select($query, ['id' => $key]);
 		            $info = $info[0];
-		            $saved[$name][$info->name][$info->filelink] = $time;
+		            $saved[$name][$info->name][$info->id] = [
+                        'time' => $time,
+                        'id' => $info->id,
+                        'filelink' => $info->filelink,
+                    ];
 	    		}
     		} catch(\Throwable $e) {
 	            return json_encode(['fail' => $e->getMessage()]);
 	        }
     		
     		foreach ($saved[$name] as $fileCategory => $fileInfo) {
-    			$max = array_keys($fileInfo, max($fileInfo))[0];
+                $max = max($fileInfo);
     			$saved[$name][$fileCategory] = [
     				'count' => count($fileInfo),
-    				'filelink' => url("images/{$name}/{$fileCategory}", $max),
+                    'id' => $max['id'],
+    				'filelink' => url("images/{$name}/{$fileCategory}", $max['filelink']),
     			];
     		}
     	}
