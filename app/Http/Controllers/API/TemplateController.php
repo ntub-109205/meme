@@ -61,7 +61,7 @@ class TemplateController extends Controller
             } else {
                 $query .= "AND t.`share` = 1 ";
             } 
-            $query .= "GROUP BY t.`id`, `filelink`, t.`name`, u.`name` ";
+            $query .= "GROUP BY t.`id`, t.`filelink`, t.`name`, u.`name`, t.`created_at` ";
             $request->time ? $query .= "ORDER BY t.`created_at` DESC" : $query .= "ORDER BY COUNT(m.`template_id`) DESC";
             $template = DB::select($query, $param); 
         } catch(\Throwable $e) {
