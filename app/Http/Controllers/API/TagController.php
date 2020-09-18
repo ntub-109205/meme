@@ -27,11 +27,11 @@ class TagController extends Controller
         $param = [];
 
     	$query = "
-            SELECT `tag_id`, t.`name`
+            SELECT mt.`tag_id`, t.`name`
 			FROM `meme_tag` mt
 			INNER JOIN tags t
 			ON mt.`tag_id` = t.`id`
-			GROUP BY `tag_id`
+			GROUP BY t.`name`
 			ORDER BY COUNT(`tag_id`) DESC 
         ";
 
