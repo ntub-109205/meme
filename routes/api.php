@@ -74,3 +74,12 @@ Route::prefix('profile')->group(function () {
 	Route::get('/show/saved', 'API\ProfileController@saved');
 	Route::get('/show/myWork', 'API\ProfileController@myWork');
 });
+
+/*
+|------------------------------------
+| tag api
+|------------------------------------
+*/
+Route::prefix('tag')->group(function () {
+	Route::get('/', 'API\TagController@popular');
+});
