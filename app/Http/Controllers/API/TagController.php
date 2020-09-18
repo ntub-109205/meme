@@ -31,7 +31,7 @@ class TagController extends Controller
 			FROM `meme_tag` mt
 			INNER JOIN tags t
 			ON mt.`tag_id` = t.`id`
-			GROUP BY t.`name`
+			GROUP BY mt.`tag_id`, t.`name`
 			ORDER BY COUNT(`tag_id`) DESC 
         ";
 
