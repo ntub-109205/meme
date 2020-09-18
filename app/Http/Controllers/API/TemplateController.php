@@ -36,6 +36,7 @@ class TemplateController extends Controller
             'category_id' => ['required', Rule::In(['1', '2'])],
             'time' => 'sometimes|boolean',
             'user' => 'sometimes|boolean',
+            'limit' => 'sometimes|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -62,8 +63,13 @@ class TemplateController extends Controller
                 $query .= "AND t.`share` = 1 ";
             } 
             $query .= "GROUP BY t.`id`, t.`filelink`, t.`name`, u.`name`, t.`created_at` ";
-            $request->time ? $query .= "ORDER BY t.`created_at` DESC" : $query .= "ORDER BY COUNT(m.`template_id`) DESC";
-            $template = DB::select($query, $param); 
+            $request->time ? $query .= "ORDER BY t.`created_at` DESC " : $query .= "ORDER BY COUNT(m.`template_id`) DESC ";
+            if ($request->limit) {
+                $query .= "LIMIT :limit ";
+                $param['limit'] = $request->limit;
+            }
+
+            $template = DB::select($query, $param);
         } catch(\Throwable $e) {
             return json_encode(['fail' => $e->getMessage()]);
         }

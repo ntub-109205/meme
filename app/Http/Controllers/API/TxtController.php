@@ -60,7 +60,7 @@ class TxtController extends Controller
 	{
 		if ($temp = Temp::where('user_id', Auth::guard('api')->user()->id)->count() == 0) {
 			$validator = Validator::make($request->all(), [
-	            'template_id' => 'numeric|required',
+	            'template_id' => 'required|numeric',
 	            'meme_share' => 'required|boolean',
 	            'tags' => 'sometimes|string'
 	        ]);
