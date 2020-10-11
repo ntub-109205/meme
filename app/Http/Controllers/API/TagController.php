@@ -9,10 +9,10 @@ use Illuminate\Support\Facades\DB;
 
 class TagController extends Controller
 {
-	// public function __construct()
- //    {
- //        $this->middleware('auth:api');
- //    }
+	public function __construct()
+    {
+        $this->middleware('auth:api');
+    }
 
     public function popular(Request $request)
     {
@@ -30,13 +30,13 @@ class TagController extends Controller
     	$query = "
             SELECT mt.`tag_id`, t.`name`
 			FROM `meme_tag` mt
-			INNER JOIN tags t
+			INNER JOIN `tags` t
 			ON mt.`tag_id` = t.`id`
         ";
 
-        if (isset($request->where)) {
+        if (isset($request->name)) {
             $query .= "WHERE t.`name` LIKE :name";
-            $param['name'] = $request->where;
+            $param['name'] = "%{$request->name}%";
         }
 
         $query .= "

@@ -19,9 +19,9 @@ use Illuminate\Support\Facades\Route;
 | login api
 |------------------------------------
 */
+Route::get('/login', 'Auth\LoginController@showLoginForm')->name('login');
 Route::post('/login', 'API\UserController@login')->name('api_login');
 Route::post('/register', 'API\UserController@register');
-
 
 /*
 |------------------------------------
