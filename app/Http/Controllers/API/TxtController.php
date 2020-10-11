@@ -72,10 +72,20 @@ class TxtController extends Controller
         	try {
         		$temp = new Temp;
 	            $temp->user_id = Auth::guard('api')->user()->id;
+	            $data = [
+            		'template_id' => $request->template_id,
+            		'meme_share' => $request->meme_share,
+            	];
+
         		if (isset($request->tags)) {
         			$tag_id = [];
         			$tags = array_filter(explode("#", $request->tags));
         			foreach ($tags as $value) {
+        				$value = trim($value);
+        				if ($value == '') {
+        					continue;
+        				}
+
         				$tag = Tag::select('id')->where('name', $value)->first();
         				if ($tag == "") {
 		                    $tag = new Tag;
@@ -84,21 +94,10 @@ class TxtController extends Controller
 		                }
 		                array_push($tag_id, $tag->id);
         			}
-        			$temp->data = json_encode(
-		        		[
-		            		'template_id' => $request->template_id,
-		            		'meme_share' => $request->meme_share,
-		            		'tags' => $tag_id
-		            	]
-		            );
-        		} else {
-        			$temp->data = json_encode(
-		        		[
-		            		'template_id' => $request->template_id,
-		            		'meme_share' => $request->meme_share
-		            	]
-		            );
-        		}
+        			$data['tags'] = $tag_id;
+				}
+
+        		$temp->data = json_encode($data);
         		$temp->save();
         		DB::commit();
         		return json_encode(['success' => 'your posts has been successfully saved!']);

@@ -9,15 +9,16 @@ use Illuminate\Support\Facades\DB;
 
 class TagController extends Controller
 {
-	public function __construct()
-    {
-        $this->middleware('auth:api');
-    }
+	// public function __construct()
+ //    {
+ //        $this->middleware('auth:api');
+ //    }
 
     public function popular(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'limit' => 'sometimes|numeric',
+            'name' => 'sometimes|string',
         ]);
         
         if ($validator->fails()) {
@@ -31,8 +32,16 @@ class TagController extends Controller
 			FROM `meme_tag` mt
 			INNER JOIN tags t
 			ON mt.`tag_id` = t.`id`
-			GROUP BY mt.`tag_id`, t.`name`
-			ORDER BY COUNT(`tag_id`) DESC 
+        ";
+
+        if (isset($request->where)) {
+            $query .= "WHERE t.`name` LIKE :name";
+            $param['name'] = $request->where;
+        }
+
+        $query .= "
+            GROUP BY mt.`tag_id`, t.`name`
+            ORDER BY COUNT(`tag_id`) DESC 
         ";
 
         if ($request->limit) {

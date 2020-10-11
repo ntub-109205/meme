@@ -21,4 +21,9 @@ Route::get('/phpinfo', function () {
     return view('phpinfo');
 });
 
+Route::get('/privacy', function () {
+    return view('privacy');
+});
+
 Route::get('/tag', 'API\TagController@popular');
+Route::get('/test', 'TestController@test');

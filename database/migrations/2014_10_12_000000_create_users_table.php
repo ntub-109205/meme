@@ -20,7 +20,7 @@ class CreateUsersTable extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('remember_token')->nullable();
-            $table->json('saved');
+            $table->json('saved'); // laravel json 不支援 default value
             $table->timestamps();
         });
     }
