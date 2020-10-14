@@ -6,10 +6,18 @@ use Illuminate\Http\Request;
 
 class TestController extends Controller
 {
-    public function test()
+    public function test(Request $request)
     {
-    	$a = ['1' => ' a b '];
-    	$a['1'] = trim($a['1']);
-    	dd($a['1']);
+    	// $image = $request->file('meme_image');
+     //    $filename = time().'.'.$image->extension();
+     //    $location = public_path('images/meme/meme/');
+     //    $image->move($location, $filename);
+
+     //    return back()->with('success','Image Upload successfully');
+    	$a = [
+    		'1' => 'ha'
+    	];
+
+    	return $a['2'];
     }
 }

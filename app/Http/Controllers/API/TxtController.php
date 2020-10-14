@@ -111,13 +111,4 @@ class TxtController extends Controller
 	    	return json_encode(['failed' => 'this user still has a temperate  data, system will automatically remove temperate data']);
 	    }
 	}
-
-	public function test(Request $request)
-	{
-		$tags = array_filter(explode("#", $request->tags));
-		foreach ($tags as $value) {
-			print($value);
-		}
-		
-	}
 }

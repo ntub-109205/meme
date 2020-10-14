@@ -45,10 +45,9 @@ class TemplateController extends Controller
 
         try {
             $param = ['category_id' => $request->category_id];
-            $category = Category::find($request->category_id);
-            $path = url('/images/templates/');
+            $path = url('/');
             $query = "
-                SELECT t.`id`, CONCAT('$path/', '$category->name/', t.`filelink`) AS `filelink`, t.`name`, u.`name` AS `author`, COUNT(m.`template_id`) AS `count`, t.`created_at`
+                SELECT t.`id`, CONCAT('$path/', t.`filelink`) AS `filelink`, t.`name`, u.`name` AS `author`, COUNT(m.`template_id`) AS `count`, t.`created_at`
                 FROM `templates` t
                 INNER JOIN `users` u
                 ON t.`user_id` = u.`id`
@@ -104,11 +103,12 @@ class TemplateController extends Controller
                 // save image
             $image = $request->file('image');
             $filename = time().'.'.$image->extension();
-            $template->filelink = $filename;
-            $template->save();
             $category = Category::find($data->category_id);
-            $location = public_path('images/templates/'.$category->name.'/'.$filename);
+            $path = 'images/templates/'.$category->name.'/'.$filename;
+            $location = public_path($path);
+            $template->filelink = $path;
             Image::make($image)->save($location);
+            $template->save();
 
                 // delete temp data 
             $deletedTemp = Temp::where('user_id', Auth::guard('api')->user()->id)->delete();
@@ -192,13 +192,11 @@ class TemplateController extends Controller
         }
 
         try {
-            $template = Template::find($request->template_id);
-            $category = Category::find($template->category_id);
-            $path = url('/images/meme/');
+            $path = url('/');
 
             // count該圖的讚數、thumb使用者有沒有按讚
             $query = "
-                SELECT m.`id`, CONCAT('$path/', '$category->name/', m.`filelink`) AS `filelink`, u.`name` AS `author`, 
+                SELECT m.`id`, CONCAT('$path/', m.`filelink`) AS `filelink`, u.`name` AS `author`, 
                 (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`meme_id` = m.`id`) AS `count`, 
                 (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`user_id` = :user_id AND mu.`meme_id` = m.`id`) AS `thumb`
                 FROM `meme` m
@@ -210,17 +208,19 @@ class TemplateController extends Controller
                 AND m.`share` = 1
                 AND t.`share` = 1
                 ";
+            $param = [
+                'user_id' => Auth::guard('api')->user()->id,
+                'template_id' => $request->template_id
+            ];
+
             if (isset($request->exclude)) {
                 $query .= "AND m.`id` != :meme_id ORDER BY `count` DESC";
-                $meme = DB::select(
-                    $query, ['user_id' => Auth::guard('api')->user()->id, 'template_id' => $request->template_id, 'meme_id' => $request->exclude]
-                );
+                $param['meme_id'] = $request->exclude;  
             } else {
                 $query .= "ORDER BY `count` DESC";
-                $meme = DB::select(
-                    $query, ['user_id' => Auth::guard('api')->user()->id, 'template_id' => $request->template_id]
-                );
             }
+
+            $meme = DB::select($query, $param);
 
             // add tags
             foreach ($meme as $key => $value) {

@@ -49,18 +49,17 @@ class ImageController extends Controller
                 // save image
             $image = $request->file('meme_image');
             $filename = time().'.'.$image->extension();
-            $meme->filelink = $filename;
+            $template = Template::find($data->template_id);
+            $category = Category::find($template->category_id);
+            $path = 'images/meme/'.$category->name.'/'.$filename;
+            $location = public_path($path);
+            Image::make($image)->save($location);
+            $meme->filelink = $path;
             $meme->save();
                 // many to many
             if (isset($data->tags)) {
                 $meme->tags()->sync($data->tags, false);
             }
-
-            $template = Template::find($data->template_id);
-            $category = Category::find($template->category_id);
-            $location = public_path('images/meme/'.$category->name.'/'.$filename);
-            Image::make($image)->save($location);
-
             // delete temp data 
             $deletedTemp = Temp::where('user_id', Auth::guard('api')->user()->id)->delete();
             DB::commit();
@@ -80,7 +79,7 @@ class ImageController extends Controller
         ]);
 
     	$validator = Validator::make($request->all(), [
-            'category_id' => ['required', Rule::In(['1', '2'])],
+            'category_id' => ['required', Rule::In(['1', '2', '3'])],
             'time' => 'sometimes|boolean'
         ]);
 
@@ -89,10 +88,9 @@ class ImageController extends Controller
         }
 
         try {
-            $category = Category::find($request->category_id);
-            $path = url('/images/meme/');
+            $path = url('/');
             $query = "
-                SELECT m.`id` AS `meme_id`, CONCAT('$path/', '$category->name/', m.`filelink`) AS `filelink`, u.`name` AS `author`, m.`template_id`,
+                SELECT m.`id` AS `meme_id`, CONCAT('$path/', m.`filelink`) AS `filelink`, u.`name` AS `author`, m.`template_id`,
                 (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`meme_id` = m.`id`) AS `count`, 
                 (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`user_id` = :user_id AND mu.`meme_id` = m.`id`) AS `thumb`, m.`created_at`
                 FROM `meme` m

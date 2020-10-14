@@ -26,4 +26,4 @@ Route::get('/privacy', function () {
 });
 
 Route::get('/tag', 'API\TagController@popular');
-Route::get('/test', 'TestController@test');
+Route::post('/test', 'TestController@test');
