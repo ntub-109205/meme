@@ -25,31 +25,61 @@ class ImageController extends Controller
     }
 
     public function store(Request $request)
-    {    
-        if ($temp = Temp::where('user_id', Auth::guard('api')->user()->id)->count() == 0) {
+    {   
+        $user = Auth::guard('api')->user()->id;
+
+        if ($temp = Temp::where('user_id', $user)->count() == 0) {
             return json_encode(['failed' => 'there has no template data']);
-        }        
-        // validate data
-        $validator = Validator::make($request->all(), [
-            'meme_image' => 'required|image',
-        ]);
-        if ($validator->fails()) {
-            return json_encode(['failed' => 'post validation failed']);
         }
 
-        $temp = Temp::select('data')->where('user_id', Auth::guard('api')->user()->id)->first();
+        // validate data
+        $validator = Validator::make($request->all(), [
+            'image' => 'required|image',
+        ]);
+
+        if ($validator->fails()) {
+            return json_encode(['failed' => $validator->errors()]);
+        }
+
+        $image = $request->file('image');
+        $temp = Temp::select('data')->where('user_id', $user)->first();
         $data = json_decode($temp->data);
+        if (strtolower($image->extension()) == 'gif') {
+            return $this->storeGif($request, $data, $user);
+        }
+
+        if (! (isset($data->template_id) && isset($data->share))) {
+            Temp::where('user_id', $user)->delete();
+            return json_encode(['failed' => 'not enough data for meme store, make sure definition `template_id` and `share` field']);
+        }
+
+        $request->merge([
+            'template_id' => $data->template_id,
+            'share' => $data->share,
+            'tags' => $data->tags ?? [],
+        ]);
+
+        $validator = Validator::make($request->all(), [
+            'template_id' => 'required|numeric',
+            'share' => 'required|boolean',
+            'tags' => 'sometimes|array'
+        ]);
+
+        if ($validator->fails()) {
+            Temp::where('user_id', $user)->delete();
+            return json_encode(['failed' => $validator->errors()]);
+        }
+
         DB::beginTransaction();
         try {
             // post meme data
             $meme = new Meme;
-            $meme->user_id = Auth::guard('api')->user()->id;
-            $meme->template_id = $data->template_id;
-            $meme->share = $data->meme_share;
+            $meme->user_id = $user;
+            $meme->template_id = $request->template_id;
+            $meme->share = $request->share;
                 // save image
-            $image = $request->file('meme_image');
-            $filename = time().'.'.$image->extension();
-            $template = Template::find($data->template_id);
+            $filename = time().'.'.strtolower($image->extension());
+            $template = Template::find($request->template_id);
             $category = Category::find($template->category_id);
             $path = 'images/meme/'.$category->name.'/'.$filename;
             $location = public_path($path);
@@ -57,17 +87,81 @@ class ImageController extends Controller
             $meme->filelink = $path;
             $meme->save();
                 // many to many
-            if (isset($data->tags)) {
-                $meme->tags()->sync($data->tags, false);
+            if (! empty($request->tags)) {
+                $meme->tags()->sync($request->tags, false);
             }
             // delete temp data 
-            $deletedTemp = Temp::where('user_id', Auth::guard('api')->user()->id)->delete();
+            $deletedTemp = Temp::where('user_id', $user)->delete();
             DB::commit();
             return json_encode(['success' => 'your posts has been successfully saved!']);
         } catch(\Throwable $e) {
             DB::rollback();
             // delete temp data 
-            $deletedTemp = Temp::where('user_id', Auth::guard('api')->user()->id)->delete();
+            $deletedTemp = Temp::where('user_id', $user)->delete();
+            return json_encode(['failed' => $e->getMessage()]);
+        }
+    }
+
+    public function storeGif(Request $request, $data, $user)
+    {
+        if (! isset($data->share)) {
+            Temp::where('user_id', $user)->delete();
+            return json_encode(['failed' => 'not enough data for gif store, make sure definition `share` field']);
+        }
+
+        $request->merge([
+            'share' => $data->share,
+            'tags' => $data->tags ?? [],
+        ]);
+
+        $validator = Validator::make($request->all(), [
+            'share' => 'required|boolean',
+            'tags' => 'sometimes|array'
+        ]);
+
+        if ($validator->fails()) {
+            Temp::where('user_id', $user)->delete();
+            return json_encode(['failed' => $validator->errors()]);
+        }
+
+        $image = $request->file('image');
+        DB::beginTransaction();
+        try {
+            // post gif template data
+            $template = new Template;
+            $template->user_id = $user;
+            $category = Category::where('name', strtolower($image->extension()))->first();
+            $template->category_id = $category->id;
+            // -- store gif image --
+            $filename = time().'.'.$image->extension();
+            $path = 'images/meme/'.$category->name.'/';
+            $image->move(public_path($path), $filename);
+            $path .= $filename;
+            // ---------------------
+            $template->filelink = $path;
+            $template->name = 'gif template';
+            $template->share = 1;
+            $template->save();
+
+            // post meme data
+            $meme = new Meme;
+            $meme->user_id = $user;
+            $meme->template_id = $template->id;
+            $meme->share = $request->share;
+            $meme->filelink = $path;
+            $meme->save();
+                // many to many
+            if (! empty($request->tags)) {
+                $meme->tags()->sync($request->tags, false);
+            }
+            // delete temp data 
+            $deletedTemp = Temp::where('user_id', $user)->delete();
+            DB::commit();
+            return json_encode(['success' => 'your posts has been successfully saved!']);
+        } catch(\Throwable $e) {
+            DB::rollback();
+            // delete temp data 
+            $deletedTemp = Temp::where('user_id', $user)->delete();
             return json_encode(['failed' => $e->getMessage()]);
         }
     }
@@ -84,7 +178,7 @@ class ImageController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return json_encode(['failed' => 'post validation failed']);
+            return json_encode(['failed' => $validator->errors()]);
         }
 
         try {

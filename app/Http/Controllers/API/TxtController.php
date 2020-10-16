@@ -18,66 +18,28 @@ class TxtController extends Controller
         $this->middleware('auth:api');
     }
 
-	public function templateStore(Request $request)
-	{
-		// validate data
-        $validator = Validator::make($request->all(), [
-            'category_id' => ['required', Rule::In(['1', '2'])],
-            'name' => 'required|max:255',
-            'share' => 'required|boolean'
+    public function store(Request $request)
+    {
+    	$validator = Validator::make($request->all(), [
+            'tags' => 'sometimes|string'
         ]);
 
-        if ($validator->fails()) {
+    	if ($validator->fails()) {
             return json_encode(['failed' => $validator->errors()]);
         }
 
-        if ($temp = Temp::where('user_id', Auth::guard('api')->user()->id)->count() == 0) {
+    	if ($temp = Temp::where('user_id', Auth::guard('api')->user()->id)->count() == 0) {
         	// post data
 	        try {
 	            $temp = new Temp;
 	            $temp->user_id = Auth::guard('api')->user()->id;
-	            $temp->data = json_encode(
-	        		[
-	            		'category_id' => $request->category_id,
-	            		'name' => $request->name,
-	            		'share' => $request->share
-	            	]
-	            );
-	            $temp->save();
-	   			return json_encode(['success' => 'your posts has been successfully saved!']);
-	        } catch(\Throwable $e) {
-	            return json_encode(['fail' => $e->getMessage()]);
-	        }
-        } else {
-        	// delete temp data
-        	$deletedTemp = Temp::where('user_id', Auth::guard('api')->user()->id)->delete();
-        	return json_encode(['failed' => 'this user still has a temperate  data, system will automatically remove temperate data']);
+	            $data = [];
+	            foreach ($request->all() as $key => $value) {      	
+	            	$data[$key] = $value;
+	            }
 
-        }
-	}
-
-	public function memeStore(Request $request)
-	{
-		if ($temp = Temp::where('user_id', Auth::guard('api')->user()->id)->count() == 0) {
-			$validator = Validator::make($request->all(), [
-	            'template_id' => 'required|numeric',
-	            'meme_share' => 'required|boolean',
-	            'tags' => 'sometimes|string'
-	        ]);
-	        if ($validator->fails()) {
-            	return json_encode(['failed' => $validator->errors()]);
-        	}
-
-        	DB::beginTransaction();
-        	try {
-        		$temp = new Temp;
-	            $temp->user_id = Auth::guard('api')->user()->id;
-	            $data = [
-            		'template_id' => $request->template_id,
-            		'meme_share' => $request->meme_share,
-            	];
-
-        		if (isset($request->tags)) {
+	            // proc tags
+	            if (isset($request->tags)) {
         			$tag_id = [];
         			$tags = array_filter(explode("#", $request->tags));
         			foreach ($tags as $value) {
@@ -97,18 +59,16 @@ class TxtController extends Controller
         			$data['tags'] = $tag_id;
 				}
 
-        		$temp->data = json_encode($data);
-        		$temp->save();
-        		DB::commit();
-        		return json_encode(['success' => 'your posts has been successfully saved!']);
-        	} catch (\Throwable $e) {
-				DB::rollback();
-				return json_encode(['failed' => $e->getMessage()]);
-        	}
-	    } else {
-	    	// delete temp data
+	            $temp->data = json_encode($data);
+	            $temp->save();
+	   			return json_encode(['success' => 'your posts has been successfully saved!']);
+	        } catch(\Throwable $e) {
+	            return json_encode(['fail' => $e->getMessage()]);
+	        }
+        } else {
+        	// delete temp data
         	$deletedTemp = Temp::where('user_id', Auth::guard('api')->user()->id)->delete();
-	    	return json_encode(['failed' => 'this user still has a temperate  data, system will automatically remove temperate data']);
-	    }
-	}
+        	return json_encode(['failed' => 'this user still has a temperate  data, system will automatically remove temperate data']);
+        }
+    }
 }

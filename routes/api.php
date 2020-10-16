@@ -37,9 +37,7 @@ Route::prefix('template')->group(function () {
 });
 
 Route::prefix('txt')->group(function () {
-	Route::post('/templateStore', 'API\TxtController@templateStore');
-	Route::post('/memeStore', 'API\TxtController@memeStore');
-	Route::post('/test', 'API\TxtController@test');
+	Route::post('/store', 'API\TxtController@store');
 });
 
 /*

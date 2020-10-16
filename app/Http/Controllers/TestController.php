@@ -12,12 +12,11 @@ class TestController extends Controller
      //    $filename = time().'.'.$image->extension();
      //    $location = public_path('images/meme/meme/');
      //    $image->move($location, $filename);
-
-     //    return back()->with('success','Image Upload successfully');
-    	$a = [
-    		'1' => 'ha'
-    	];
-
-    	return $a['2'];
+        
+        // return $request;
+        foreach ($request->all() as $key => $value) {
+            echo($key);
+            echo "   ";
+        }
     }
 }

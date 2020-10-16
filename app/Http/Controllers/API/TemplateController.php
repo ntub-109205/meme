@@ -77,33 +77,50 @@ class TemplateController extends Controller
 
     public function store(Request $request)
     {
+        $user = Auth::guard('api')->user()->id;
+
+        if ($temp = Temp::where('user_id', $user)->count() == 0) {
+            return json_encode(['failed' => 'there has no template data']);
+        }
+
+        $temp = Temp::select('data')->where('user_id', $user)->first();
+        $data = json_decode($temp->data);
+        if (! (isset($data->category_id) && isset($data->name) && isset($data->share))) {
+            Temp::where('user_id', $user)->delete();
+            return json_encode(['failed' => 'not enough data for template store, make sure definition `category_id`, `name` and `share` field']);
+        }
+
+        $request->merge([
+            'category_id' => $data->category_id,
+            'name' => $data->name,
+            'share' => $data->share
+        ]);
+
         // validate data
         $validator = Validator::make($request->all(), [
+            'category_id' => ['required', Rule::In(['1', '2'])],
+            'name' => 'required|max:255',
+            'share' => 'required|boolean',
             'image' => 'required|image'
         ]);
 
         if ($validator->fails()) {
+            Temp::where('user_id', $user)->delete();
             return json_encode(['failed' => $validator->errors()]);
         }
 
-        if ($temp = Temp::where('user_id', Auth::guard('api')->user()->id)->count() == 0) {
-            return json_encode(['failed' => 'there has no template data']);
-        }
-
         // post data
-        $temp = Temp::select('data')->where('user_id', Auth::guard('api')->user()->id)->first();
-        $data = json_decode($temp->data);
         DB::beginTransaction();
         try {
             $template = new Template;
-            $template->user_id = Auth::guard('api')->user()->id;
-            $template->category_id = $data->category_id;
-            $template->name = $data->name;
-            $template->share = $data->share;
+            $template->user_id = $user;
+            $template->category_id = $request->category_id;
+            $template->name = $request->name;
+            $template->share = $request->share;
                 // save image
             $image = $request->file('image');
-            $filename = time().'.'.$image->extension();
-            $category = Category::find($data->category_id);
+            $filename = time().'.'.strtolower($image->extension());
+            $category = Category::find($request->category_id);
             $path = 'images/templates/'.$category->name.'/'.$filename;
             $location = public_path($path);
             $template->filelink = $path;
@@ -111,14 +128,16 @@ class TemplateController extends Controller
             $template->save();
 
                 // delete temp data 
-            $deletedTemp = Temp::where('user_id', Auth::guard('api')->user()->id)->delete();
+            $deletedTemp = Temp::where('user_id', $user)->delete();
             DB::commit();
-             return json_encode(['success' => 'your posts has been successfully saved!', 
-                                 'template_id' => $template->id]);
+            return json_encode([
+                'success' => 'your posts has been successfully saved!',
+                'template_id' => $template->id
+            ]);
         } catch(\Throwable $e) {
             DB::rollback();
             // delete temp data 
-            $deletedTemp = Temp::where('user_id', Auth::guard('api')->user()->id)->delete();
+            $deletedTemp = Temp::where('user_id', $user)->delete();
             return json_encode(['failed' => $e->getMessage()]);
         }
     }
