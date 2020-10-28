@@ -164,7 +164,7 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
     	$validator = Validator::make($request->all(), [
-            'table' => ['required', Rule::In(['meme', 'templates', 'tags'])],
+            'table' => ['required', Rule::In(['meme', 'templates'])],
             'id' => 'required|numeric',
             'value' => 'required|string',
         ]);

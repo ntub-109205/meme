@@ -33,7 +33,7 @@ class TemplateController extends Controller
 
         // validate data
         $validator = Validator::make($request->all(), [
-            'category_id' => ['required', Rule::In(['1', '2', '%'])],
+            'category_id' => ['required', Rule::In(['0', '1', '2'])],
             'time' => 'sometimes|boolean',
             'user' => 'sometimes|boolean',
             'limit' => 'sometimes|numeric',
@@ -41,6 +41,10 @@ class TemplateController extends Controller
 
         if ($validator->fails()) {
             return json_encode(['failed' => $validator->errors()]);
+        }
+
+        if ($request->category_id == '0') {
+            $request->category_id = '%';
         }
 
         try {
