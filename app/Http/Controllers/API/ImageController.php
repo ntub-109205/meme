@@ -175,7 +175,8 @@ class ImageController extends Controller
 
     	$validator = Validator::make($request->all(), [
             'category_id' => ['required', Rule::In(['1', '2', '3'])],
-            'time' => 'sometimes|boolean'
+            'time' => 'sometimes|boolean',
+            'user' => 'sometimes|boolean'
         ]);
 
         if ($validator->fails()) {
@@ -184,8 +185,14 @@ class ImageController extends Controller
 
         try {
             $path = url('/');
+            $user_id = Auth::guard('api')->user()->id;
+            $param = [
+                'user_id' => $user_id,
+                'category_id' => $request->category_id
+            ];
+
             $query = "
-                SELECT m.`id` AS `meme_id`, CONCAT('$path/', m.`filelink`) AS `filelink`, u.`name` AS `author`, m.`template_id`, t.`share` AS `template_share`, 
+                SELECT m.`id` AS `meme_id`, CONCAT('$path/', m.`filelink`) AS `filelink`, u.`name` AS `author`, m.`template_id`, t.`share` AS `template_share`, m.`share` AS `meme_share`,
                 (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`meme_id` = m.`id`) AS `count`, 
                 (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`user_id` = :user_id AND mu.`meme_id` = m.`id`) AS `thumb`, m.`created_at`
                 FROM `meme` m
@@ -195,11 +202,18 @@ class ImageController extends Controller
                 ON t.`category_id` = c.`id`
                 INNER JOIN `users` u
                 ON m.`user_id` = u.`id`
-                WHERE c.`id` = :category_id
-                AND m.`share` = 1
+                WHERE c.`id` = :category_id 
                 ";
+            
+            if ($request->user) {   
+                $query .= "AND u.`id` = :user_id1 ";
+                $param['user_id1'] = $user_id;
+            } else {
+                $query .= "AND m.`share` = 1 ";
+            } 
+
             $request->time ? $query .= "ORDER BY m.`created_at` DESC" : $query .= "ORDER BY `count` DESC";
-            $info = DB::select($query, ['user_id' => Auth::guard('api')->user()->id, 'category_id' => $request->category_id]);
+            $info = DB::select($query, $param);
 
             // add tags
             foreach ($info as $key => $value) {
