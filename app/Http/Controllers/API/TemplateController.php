@@ -33,7 +33,7 @@ class TemplateController extends Controller
 
         // validate data
         $validator = Validator::make($request->all(), [
-            'category_id' => ['required', Rule::In(['1', '2'])],
+            'category_id' => ['required', Rule::In(['1', '2', '%'])],
             'time' => 'sometimes|boolean',
             'user' => 'sometimes|boolean',
             'limit' => 'sometimes|numeric',
@@ -53,7 +53,7 @@ class TemplateController extends Controller
                 ON t.`user_id` = u.`id`
                 LEFT JOIN `meme` m
                 ON t.`id` = m.`template_id`
-                WHERE t.`category_id` = :category_id
+                WHERE t.`category_id` LIKE :category_id
                 ";
             if ($request->user) {   
                 $query .= "AND u.`id` = :user ";

@@ -32,10 +32,13 @@ class TagController extends Controller
 			FROM `meme_tag` mt
 			INNER JOIN `tags` t
 			ON mt.`tag_id` = t.`id`
+            INNER JOIN  `meme` m
+            ON mt.`meme_id` = m.`id`
+            WHERE m.`share` = 1
         ";
 
         if (isset($request->name)) {
-            $query .= "WHERE t.`name` LIKE :name";
+            $query .= "AND t.`name` LIKE :name";
             $param['name'] = "%{$request->name}%";
         }
 

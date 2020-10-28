@@ -44,6 +44,7 @@ class ImageController extends Controller
         $image = $request->file('image');
         $temp = Temp::select('data')->where('user_id', $user)->first();
         $data = json_decode($temp->data);
+        
         if (strtolower($image->extension()) == 'gif') {
             return $this->storeGif($request, $data, $user);
         }
@@ -140,7 +141,7 @@ class ImageController extends Controller
             // ---------------------
             $template->filelink = $path;
             $template->name = 'gif template';
-            $template->share = 1;
+            $template->share = 0;
             $template->save();
 
             // post meme data
@@ -184,7 +185,7 @@ class ImageController extends Controller
         try {
             $path = url('/');
             $query = "
-                SELECT m.`id` AS `meme_id`, CONCAT('$path/', m.`filelink`) AS `filelink`, u.`name` AS `author`, m.`template_id`,
+                SELECT m.`id` AS `meme_id`, CONCAT('$path/', m.`filelink`) AS `filelink`, u.`name` AS `author`, m.`template_id`, t.`share` AS `template_share`, 
                 (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`meme_id` = m.`id`) AS `count`, 
                 (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`user_id` = :user_id AND mu.`meme_id` = m.`id`) AS `thumb`, m.`created_at`
                 FROM `meme` m
@@ -196,7 +197,6 @@ class ImageController extends Controller
                 ON m.`user_id` = u.`id`
                 WHERE c.`id` = :category_id
                 AND m.`share` = 1
-                AND t.`share` = 1
                 ";
             $request->time ? $query .= "ORDER BY m.`created_at` DESC" : $query .= "ORDER BY `count` DESC";
             $info = DB::select($query, ['user_id' => Auth::guard('api')->user()->id, 'category_id' => $request->category_id]);

@@ -8,7 +8,9 @@ use Auth;
 use App\Meme;
 use App\Template;
 use App\User;
+use Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
 {
@@ -157,5 +159,57 @@ class ProfileController extends Controller
 
         // return
         return json_encode(array_merge($meme_array, $template_array));
+    }
+
+    public function update(Request $request)
+    {
+    	$validator = Validator::make($request->all(), [
+            'table' => ['required', Rule::In(['meme', 'templates', 'tags'])],
+            'id' => 'required|numeric',
+            'value' => 'required|string',
+        ]);
+
+    	if ($validator->fails()) {
+            return json_encode(['failed' => $validator->errors()]);
+        }
+
+    	switch ($request->table) {
+		    case 'meme':
+		        $validator = Validator::make(['field' => $request->field], [
+	            	'field' => ['required', Rule::In(['share'])],
+	        	]);
+		        break;
+		    case 'templates':
+		        $validator = Validator::make(['field' => $request->field], [
+	            	'field' => ['required', Rule::In(['share', 'name'])],
+	        	]);
+		        break;
+		    case 'tags':
+		        $validator = Validator::make(['field' => $request->field], [
+	            	'field' => ['required', Rule::In(['name'])],
+	        	]);
+		        break;
+		}
+
+		if ($validator->fails()) {
+            return json_encode(['failed' => $validator->errors()]);
+        }
+
+        try {
+            $author = DB::table($request->table)
+                ->select('user_id')
+                ->where('id', $request->id)
+                ->first()
+                ->user_id;
+            if ($author != Auth::guard('api')->user()->id) {
+            	return json_encode(['failed' => "You don't have permission to update this"]);
+            }
+        	DB::table($request->table)
+		        ->where('id', $request->id)
+		        ->update([$request->field => $request->value]);
+		    return json_encode(['success' => 'This post was successfully change!']);
+        } catch(\Throwable $e) {
+            return json_encode(['failed' => $e->getMessage()]);
+        }
     }
 }

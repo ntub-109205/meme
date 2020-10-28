@@ -62,6 +62,7 @@ Route::prefix('profile')->group(function () {
 	Route::get('/', 'API\ProfileController@user');
 	Route::get('/show/saved', 'API\ProfileController@saved');
 	Route::get('/show/myWork', 'API\ProfileController@myWork');
+	Route::post('/update', 'API\ProfileController@update');
 });
 
 /*
