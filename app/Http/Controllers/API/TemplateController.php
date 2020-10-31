@@ -65,7 +65,7 @@ class TemplateController extends Controller
             } else {
                 $query .= "AND t.`share` = 1 ";
             } 
-            $query .= "GROUP BY t.`id`, t.`filelink`, t.`name`, u.`name`, t.`created_at` ";
+            $query .= "GROUP BY t.`id`, t.`filelink`, t.`name`, u.`name`, t.`created_at`, t.`share` ";
             $request->time ? $query .= "ORDER BY t.`created_at` DESC " : $query .= "ORDER BY COUNT(m.`template_id`) DESC ";
             if ($request->limit) {
                 $query .= "LIMIT :limit ";
