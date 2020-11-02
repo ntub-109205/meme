@@ -36,6 +36,7 @@ class TemplateController extends Controller
             'category_id' => ['required', Rule::In(['0', '1', '2'])],
             'time' => 'sometimes|boolean',
             'user' => 'sometimes|boolean',
+            'name' => 'sometimes|string',
             'limit' => 'sometimes|numeric',
         ]);
 
@@ -64,7 +65,11 @@ class TemplateController extends Controller
                 $param['user'] = Auth::guard('api')->user()->id;
             } else {
                 $query .= "AND t.`share` = 1 ";
-            } 
+            }
+            if (isset($request->name)) {
+                $query .= "AND t.`name` LIKE :name ";
+                $param['name'] = "%".$request->name."%";
+            }
             $query .= "GROUP BY t.`id`, t.`filelink`, t.`name`, u.`name`, t.`created_at`, t.`share` ";
             $request->time ? $query .= "ORDER BY t.`created_at` DESC " : $query .= "ORDER BY COUNT(m.`template_id`) DESC ";
             if ($request->limit) {
