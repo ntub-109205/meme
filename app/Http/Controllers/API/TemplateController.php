@@ -35,7 +35,7 @@ class TemplateController extends Controller
         $validator = Validator::make($request->all(), [
             'category_id' => ['required', Rule::In(['0', '1', '2'])],
             'time' => 'sometimes|boolean',
-            'user' => 'sometimes|boolean',
+            'profile' => ['sometimes', Rule::In(['saved', 'myWork'])],
             'name' => 'sometimes|string',
             'limit' => 'sometimes|numeric',
         ]);
@@ -60,18 +60,37 @@ class TemplateController extends Controller
                 ON t.`id` = m.`template_id`
                 WHERE t.`category_id` LIKE :category_id
                 ";
-            if ($request->user) {   
-                $query .= "AND u.`id` = :user ";
-                $param['user'] = Auth::guard('api')->user()->id;
+
+            // profile
+            $user = Auth::guard('api')->user();
+            if ($request->profile == 'myWork') {   
+                $query .= "AND u.`id` = :profile ";
+                $param['profile'] = $user->id;
+            } else if ($request->profile == 'saved') {
+                $data = $user->saved;
+                $data = json_decode($data, 1); //array
+                $saved = [];
+                foreach ($data['templates'] as $id => $timestamp) {
+                    array_push($saved, $id);
+                }
+                $saved = implode(',', $saved);
+                $query .= "AND t.`id` IN (".$saved.") AND t.`share` = 1 ";
             } else {
                 $query .= "AND t.`share` = 1 ";
             }
+
+            // name
             if (isset($request->name)) {
                 $query .= "AND t.`name` LIKE :name ";
                 $param['name'] = "%".$request->name."%";
             }
+
             $query .= "GROUP BY t.`id`, t.`filelink`, t.`name`, u.`name`, t.`created_at`, t.`share` ";
+
+            // time
             $request->time ? $query .= "ORDER BY t.`created_at` DESC " : $query .= "ORDER BY COUNT(m.`template_id`) DESC ";
+
+            // limit
             if ($request->limit) {
                 $query .= "LIMIT :limit ";
                 $param['limit'] = $request->limit;

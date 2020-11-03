@@ -25,5 +25,4 @@ Route::get('/privacy', function () {
     return view('privacy');
 });
 
-// Route::get('/saved', 'API\ProfileController@saved');
 Route::post('/test', 'TestController@test');

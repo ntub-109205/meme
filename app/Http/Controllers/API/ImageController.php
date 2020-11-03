@@ -176,7 +176,7 @@ class ImageController extends Controller
     	$validator = Validator::make($request->all(), [
             'category_id' => ['required', Rule::In(['1', '2', '3'])],
             'time' => 'sometimes|boolean',
-            'user' => 'sometimes|boolean'
+            'profile' => ['sometimes', Rule::In(['saved', 'myWork'])],
         ]);
 
         if ($validator->fails()) {
@@ -185,9 +185,9 @@ class ImageController extends Controller
 
         try {
             $path = url('/');
-            $user_id = Auth::guard('api')->user()->id;
+            $user = Auth::guard('api')->user();
             $param = [
-                'user_id' => $user_id,
+                'user_id' => $user->id,
                 'category_id' => $request->category_id
             ];
 
@@ -205,13 +205,24 @@ class ImageController extends Controller
                 WHERE c.`id` = :category_id 
                 ";
             
-            if ($request->user) {   
-                $query .= "AND u.`id` = :user_id1 ";
-                $param['user_id1'] = $user_id;
+            // profile
+            if ($request->profile == 'myWork') {   
+                $query .= "AND u.`id` = :profile ";
+                $param['profile'] = $user->id;
+            } else if ($request->profile == 'saved') {
+                $data = $user->saved;
+                $data = json_decode($data, 1); //array
+                $saved = [];
+                foreach ($data['meme'] as $id => $timestamp) {
+                    array_push($saved, $id);
+                }
+                $saved = implode(',', $saved);
+                $query .= "AND m.`id` IN (".$saved.") AND m.`share` = 1 ";
             } else {
                 $query .= "AND m.`share` = 1 ";
-            } 
+            }
 
+            // time 
             $request->time ? $query .= "ORDER BY m.`created_at` DESC" : $query .= "ORDER BY `count` DESC";
             $info = DB::select($query, $param);
 
