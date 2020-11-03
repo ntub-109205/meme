@@ -25,4 +25,4 @@ Route::get('/privacy', function () {
     return view('privacy');
 });
 
-Route::post('/test', 'TestController@test');
+Route::get('/test', 'TestController@test');

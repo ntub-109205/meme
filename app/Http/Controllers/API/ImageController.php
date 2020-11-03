@@ -177,6 +177,7 @@ class ImageController extends Controller
             'category_id' => ['required', Rule::In(['1', '2', '3'])],
             'time' => 'sometimes|boolean',
             'profile' => ['sometimes', Rule::In(['saved', 'myWork'])],
+            'tag_name' => 'sometimes|string'
         ]);
 
         if ($validator->fails()) {
@@ -192,7 +193,7 @@ class ImageController extends Controller
             ];
 
             $query = "
-                SELECT m.`id` AS `meme_id`, CONCAT('$path/', m.`filelink`) AS `filelink`, u.`name` AS `author`, m.`template_id`, t.`share` AS `template_share`, m.`share` AS `meme_share`,
+                SELECT DISTINCT m.`id` AS `meme_id`, CONCAT('$path/', m.`filelink`) AS `filelink`, u.`name` AS `author`, m.`template_id`, t.`share` AS `template_share`, m.`share` AS `meme_share`,
                 (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`meme_id` = m.`id`) AS `count`, 
                 (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`user_id` = :user_id AND mu.`meme_id` = m.`id`) AS `thumb`, m.`created_at`
                 FROM `meme` m
@@ -202,6 +203,10 @@ class ImageController extends Controller
                 ON t.`category_id` = c.`id`
                 INNER JOIN `users` u
                 ON m.`user_id` = u.`id`
+                LEFT JOIN `meme_tag` mt
+                ON m.`id` = mt.`meme_id`
+                LEFT JOIN `tags` ta
+                ON ta.`id` = mt.`tag_id`
                 WHERE c.`id` = :category_id 
                 ";
             
@@ -220,6 +225,12 @@ class ImageController extends Controller
                 $query .= "AND m.`id` IN (".$saved.") AND m.`share` = 1 ";
             } else {
                 $query .= "AND m.`share` = 1 ";
+            }
+
+            // tag name
+            if (isset($request->tag_name)) {
+                $query .= "AND ta.`name` LIKE :name ";
+                $param['name'] = "%".$request->tag_name."%";
             }
 
             // time 

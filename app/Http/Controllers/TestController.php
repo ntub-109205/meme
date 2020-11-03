@@ -3,20 +3,22 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use App\Meme;
 
 class TestController extends Controller
 {
-    public function test(Request $request)
+    public function test()
     {
-    	// $image = $request->file('meme_image');
-     //    $filename = time().'.'.$image->extension();
-     //    $location = public_path('images/meme/meme/');
-     //    $image->move($location, $filename);
-        
-        // return $request;
-        foreach ($request->all() as $key => $value) {
-            echo($key);
-            echo "   ";
-        }
+    	$a = [
+            "a" => "a",
+            "b" => "b"
+        ];
+        Arr::forget($a, 'a');
+
+        // $tags = Meme::find(1)->tags()->where('name', 'LIKE', '%h%')->get();
+        $tags = Meme::find(1)->tags()->pluck('name');
+        // dd($tags);
+        dd(strlen('$2y$10$qlbiLMQn7bE.G5HSsh7Oyu3Kdj/Jqv0oZYMdEs82M1e/pPrb4XwKm'));
     }
 }
