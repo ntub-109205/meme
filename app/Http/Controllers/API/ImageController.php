@@ -222,6 +222,9 @@ class ImageController extends Controller
                     array_push($saved, $id);
                 }
                 $saved = implode(',', $saved);
+                if (empty($saved)) {
+                    return json_encode(['meme' => []]);
+                }
                 $query .= "AND m.`id` IN (".$saved.") AND m.`share` = 1 ";
             } else {
                 $query .= "AND m.`share` = 1 ";

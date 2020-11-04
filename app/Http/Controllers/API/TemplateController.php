@@ -74,6 +74,9 @@ class TemplateController extends Controller
                     array_push($saved, $id);
                 }
                 $saved = implode(',', $saved);
+                if (empty($saved)) {
+                    return json_encode(['templates' => []]);
+                }
                 $query .= "AND t.`id` IN (".$saved.") AND t.`share` = 1 ";
             } else {
                 $query .= "AND t.`share` = 1 ";
