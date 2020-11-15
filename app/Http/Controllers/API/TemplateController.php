@@ -52,7 +52,7 @@ class TemplateController extends Controller
             $param = ['category_id' => $request->category_id];
             $path = url('/');
             $query = "
-                SELECT t.`id`, CONCAT('$path/', t.`filelink`) AS `filelink`, t.`name`, u.`name` AS `author`, COUNT(m.`template_id`) AS `count`, t.`created_at`, t.`share`
+                SELECT t.`id`, CONCAT('$path/', t.`filelink`) AS `filelink`, t.`name`, u.`name` AS `author`, COUNT(m.`template_id`) AS `count`, t.`share`, t.`created_at`
                 FROM `templates` t
                 INNER JOIN `users` u
                 ON t.`user_id` = u.`id`
