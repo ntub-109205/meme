@@ -26,3 +26,6 @@ Route::get('/privacy', function () {
 });
 
 Route::get('/test', 'TestController@test');
+
+// Route::get('/redirect', 'API\SocialiteController@redirectToProvider');
+// Route::get('/callback', 'API\SocialiteController@handleProviderCallback');
