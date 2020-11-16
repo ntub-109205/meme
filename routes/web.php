@@ -27,5 +27,8 @@ Route::get('/privacy', function () {
 
 Route::get('/test', 'TestController@test');
 
-// Route::get('/redirect', 'API\SocialiteController@redirectToProvider');
-// Route::get('/callback', 'API\SocialiteController@handleProviderCallback');
+Route::get('/redirect', 'API\SocialiteController@redirectToProvider');
+Route::get('/callback', 'API\SocialiteController@handleProviderCallback');
+
+// Route::get('/google-redirect', 'API\SocialiteController@google_redirectToProvider');
+// Route::get('/google-callback', 'API\SocialiteController@google_handleProviderCallback');
