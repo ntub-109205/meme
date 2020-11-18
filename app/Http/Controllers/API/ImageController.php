@@ -193,7 +193,7 @@ class ImageController extends Controller
             ];
 
             $query = "
-                SELECT DISTINCT m.`id` AS `meme_id`, CONCAT('$path/', m.`filelink`) AS `filelink`, u.`name` AS `author`, m.`template_id`, t.`share` AS `template_share`, m.`share` AS `meme_share`,
+                SELECT DISTINCT m.`id` AS `meme_id`, CONCAT('$path/', m.`filelink`) AS `meme_filelink`, u.`name` AS `author`, m.`template_id`, CONCAT('$path/', t.`filelink`) AS `template_filelink`, t.`share` AS `template_share`, m.`share` AS `meme_share`,
                 (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`meme_id` = m.`id`) AS `count`, 
                 (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`user_id` = :user_id AND mu.`meme_id` = m.`id`) AS `thumb`, m.`created_at`
                 FROM `meme` m
