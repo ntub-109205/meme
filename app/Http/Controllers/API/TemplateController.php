@@ -246,7 +246,7 @@ class TemplateController extends Controller
 
             // count該圖的讚數、thumb使用者有沒有按讚
             $query = "
-                SELECT m.`id`, CONCAT('$path/', m.`filelink`) AS `filelink`, u.`name` AS `author`, 
+                SELECT m.`id`, CONCAT('$path/', m.`filelink`) AS `meme_filelink`, CONCAT('$path/', t.`filelink`) AS `template_filelink`, u.`name` AS `author`, 
                 (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`meme_id` = m.`id`) AS `count`, 
                 (SELECT COUNT(*) FROM `meme_user` mu WHERE mu.`user_id` = :user_id AND mu.`meme_id` = m.`id`) AS `thumb`
                 FROM `meme` m
