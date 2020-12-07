@@ -5,20 +5,19 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use App\Meme;
+use App\User;
+use Auth;
 
 class TestController extends Controller
 {
     public function test()
     {
-    	$a = [
-            "a" => "a",
-            "b" => "b"
-        ];
-        Arr::forget($a, 'a');
+    	$existingUser = User::where('email', 'kevin0507a@gmail.com')->first();
+        // if ($existingUser) {
+        //     auth('api')->login($existingUser, true);
+        // }
 
-        // $tags = Meme::find(1)->tags()->where('name', 'LIKE', '%h%')->get();
-        $tags = Meme::find(1)->tags()->pluck('name');
-        // dd($tags);
-        dd(strlen('$2y$10$qlbiLMQn7bE.G5HSsh7Oyu3Kdj/Jqv0oZYMdEs82M1e/pPrb4XwKm'));
+        auth('web')->login($existingUser, true);
+        dd(Auth::guard('api')->user()->id);
     }
 }

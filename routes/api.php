@@ -20,7 +20,8 @@ use Illuminate\Support\Facades\Route;
 |------------------------------------
 */
 Route::get('/login', 'Auth\LoginController@showLoginForm')->name('login');
-Route::post('/login', 'API\UserController@login')->name('api_login');
+Route::post('/login', 'API\UserController@login');
+Route::post('/socialLogin', 'API\UserController@socialLogin');
 Route::post('/register', 'API\UserController@register');
 
 /*

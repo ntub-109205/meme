@@ -11,11 +11,6 @@ use Hash;
 
 class UserController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth:api')->except(['login', 'register']);
-    }
-
     /** 
      * login api 
      * 
@@ -29,7 +24,7 @@ class UserController extends Controller
         ]);
 
 		if ($validator->fails()) { 
-            return response()->json(['error'=>$validator->errors()], 401);            
+            return response()->json(['error' => $validator->errors()], 401);
         }
 
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) { 
@@ -37,7 +32,7 @@ class UserController extends Controller
             $success['token'] = $user->createToken('authToken')->accessToken; 
             return response()->json(['success' => $success]);
         } else { 
-            return response()->json(['error'=>'Unauthorised'], 401); 
+            return response()->json(['error' => 'Unauthorised'], 401); 
         } 
     }
 
@@ -52,7 +47,7 @@ class UserController extends Controller
         ]);
 
 		if ($validator->fails()) { 
-            return response()->json(['error'=>$validator->errors()], 401);            
+            return response()->json(['error' => $validator->errors()], 401);            
         }
 
         $user = new User;
@@ -64,6 +59,37 @@ class UserController extends Controller
 
         $success['token'] =  $user->createToken('MyApp')-> accessToken;
         $success['name'] =  $user->name;
-		return response()->json(['success'=>$success]); 
+		return response()->json(['success' => $success]); 
+    }
+
+    public function socialLogin(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string',
+            'id' => 'required|string'
+        ]);
+
+        if ($validator->fails()) { 
+            return response()->json(['error' => $validator->errors()], 401);            
+        }
+
+        $existingUser = User::where('email', $request->id)->first();
+
+        if (! $existingUser) {
+            $user = new User;
+            $user->name = $request->name;
+            $user->email = $request->id;
+            $user->password = Hash::make($request->id);
+            $user->saved = json_encode(['meme' => [], 'templates' => []]);
+            $user->save();
+        }
+
+        if (Auth::attempt(['email' => $request->id, 'password' => $request->id])) { 
+            $user = Auth::user();
+            $success['token'] = $user->createToken('authToken')->accessToken; 
+            return response()->json(['success' => $success]);
+        } else { 
+            return response()->json(['error' => 'Unauthorised'], 401); 
+        } 
     }
 }
